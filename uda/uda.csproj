@@ -1,0 +1,90 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{82BD2799-9C41-4A51-9539-F60B6E0AE5A7}</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>uda</RootNamespace>
+    <AssemblyName>uda</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Collections.Immutable">
+      <HintPath>..\packages\System.Collections.Immutable.1.1.33-beta\lib\portable-net45+win8+wp8+wpa81\System.Collections.Immutable.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Architecture\AMD64MachineCodeReader.cs" />
+    <Compile Include="CodeWriter.cs" />
+    <Compile Include="EnumerableExtensions.cs" />
+    <Compile Include="Architecture\IMachineCodeReader.cs" />
+    <Compile Include="Intermediate\AddressInstructionPair.cs" />
+    <Compile Include="Intermediate\AssignmentInstruction.cs" />
+    <Compile Include="Intermediate\BasicBlock.cs" />
+    <Compile Include="Intermediate\BasicBlockReference.cs" />
+    <Compile Include="Intermediate\BasicBlockTable.cs" />
+    <Compile Include="Intermediate\ConditionalJumpInstruction.cs" />
+    <Compile Include="Intermediate\Expression.cs" />
+    <Compile Include="Intermediate\Function.cs" />
+    <Compile Include="Intermediate\IBasicBlock.cs" />
+    <Compile Include="Intermediate\IfStatement.cs" />
+    <Compile Include="Intermediate\IInstruction.cs" />
+    <Compile Include="Intermediate\IJumpInstruction.cs" />
+    <Compile Include="Intermediate\Instruction.cs" />
+    <Compile Include="Intermediate\InstructionType.cs" />
+    <Compile Include="Intermediate\IWritableMemory.cs" />
+    <Compile Include="Intermediate\ISymbol.cs" />
+    <Compile Include="Intermediate\GotoInstruction.cs" />
+    <Compile Include="Intermediate\JumpInstruction.cs" />
+    <Compile Include="Intermediate\ReturnInstruction.cs" />
+    <Compile Include="Language\CLanguageWriter.cs" />
+    <Compile Include="Language\ILanguageWriter.cs" />
+    <Compile Include="Program.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Strategy\IDecompileStrategy.cs" />
+    <Compile Include="Strategy\LocalRenumberStrategy.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>
