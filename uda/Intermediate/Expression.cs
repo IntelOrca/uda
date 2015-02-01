@@ -149,6 +149,132 @@ namespace uda.Intermediate
 		}
 	}
 
+	internal class AndExpression : IBinaryExpression
+	{
+		private readonly IExpression _left, _right;
+
+		public IExpression Left { get { return _left; } }
+		public IExpression Right { get { return _right; } }
+
+		public AndExpression(IExpression left, IExpression right)
+		{
+			_left = left;
+			_right = right;
+		}
+
+		public IEnumerable<IExpression> Children { get { return new[] { _left, _right }; } }
+
+		public override string ToString()
+		{
+			return "(" + _left + " & " + _right + ")";
+		}
+	}
+
+	internal class OrExpression : IBinaryExpression
+	{
+		private readonly IExpression _left, _right;
+
+		public IExpression Left { get { return _left; } }
+		public IExpression Right { get { return _right; } }
+
+		public OrExpression(IExpression left, IExpression right)
+		{
+			_left = left;
+			_right = right;
+		}
+
+		public IEnumerable<IExpression> Children { get { return new[] { _left, _right }; } }
+
+		public override string ToString()
+		{
+			return "(" + _left + " | " + _right + ")";
+		}
+	}
+
+	internal class LogicalLeftShiftExpression : IBinaryExpression
+	{
+		private readonly IExpression _left, _right;
+
+		public IExpression Left { get { return _left; } }
+		public IExpression Right { get { return _right; } }
+
+		public LogicalLeftShiftExpression(IExpression left, IExpression right)
+		{
+			_left = left;
+			_right = right;
+		}
+
+		public IEnumerable<IExpression> Children { get { return new[] { _left, _right }; } }
+
+		public override string ToString()
+		{
+			return "(" + _left + " << " + _right + ")";
+		}
+	}
+
+	internal class LogicalRightShiftExpression : IBinaryExpression
+	{
+		private readonly IExpression _left, _right;
+
+		public IExpression Left { get { return _left; } }
+		public IExpression Right { get { return _right; } }
+
+		public LogicalRightShiftExpression(IExpression left, IExpression right)
+		{
+			_left = left;
+			_right = right;
+		}
+
+		public IEnumerable<IExpression> Children { get { return new[] { _left, _right }; } }
+
+		public override string ToString()
+		{
+			return "(" + _left + " >> " + _right + ")";
+		}
+	}
+
+	internal class ArithmeticRightShiftExpression : IBinaryExpression
+	{
+		private readonly IExpression _left, _right;
+
+		public IExpression Left { get { return _left; } }
+		public IExpression Right { get { return _right; } }
+
+		public ArithmeticRightShiftExpression(IExpression left, IExpression right)
+		{
+			_left = left;
+			_right = right;
+		}
+
+		public IEnumerable<IExpression> Children { get { return new[] { _left, _right }; } }
+
+		public override string ToString()
+		{
+			return "(" + _left + " >> " + _right + ")";
+		}
+	}
+
+	internal class RotateRightShiftExpression : IBinaryExpression
+	{
+		private readonly IExpression _left, _right;
+
+		public IExpression Left { get { return _left; } }
+		public IExpression Right { get { return _right; } }
+
+		public RotateRightShiftExpression(IExpression left, IExpression right)
+		{
+			_left = left;
+			_right = right;
+		}
+
+		public IEnumerable<IExpression> Children { get { return new[] { _left, _right }; } }
+
+		public override string ToString()
+		{
+			return "(" + _left + " >>> " + _right + ")";
+		}
+	}
+
 	internal class EqualityExpression : IBinaryExpression
 	{
 		private readonly IExpression _left, _right;

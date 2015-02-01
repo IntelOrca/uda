@@ -13,6 +13,7 @@ namespace uda
 	{
 		private static string _inputFile;
 		private static long _address;
+		private static string _architecture = "x86";
 
 		private static void Main(string[] args)
 		{
@@ -21,12 +22,20 @@ namespace uda
 
 			// Read binary and create basic instructions
 			AddressInstructionPair[] iis;
-			using (var machineCodeReader = new AMD64MachineCodeReader(_inputFile))
-				iis = machineCodeReader.Read(_address).ToArray();
+			if (_architecture.ToLower() == "x86") {
+				using (var machineCodeReader = new AMD64MachineCodeReader(_inputFile))
+					iis = machineCodeReader.Read(_address).ToArray();
+			} else if (_architecture.ToLower() == "arm") {
+				using (var machineCodeReader = new ARMMachineCodeReader(_inputFile))
+					iis = machineCodeReader.Read(_address).ToArray();
+			} else {
+				Console.WriteLine("Unknown or unsupported architecture.");
+				return;
+			}
 
 			// Create function and block table
 			Function function = new Function();
-			function.Name = "sub_6C4209";
+			function.Name = String.Format("sub_{0:X6}", _address);
 			function.BlockTable = BasicBlockTable.CreateFromInstructions(iis);
 
 			// Run decompile strategies
@@ -51,6 +60,10 @@ namespace uda
 						switch (option) {
 						case "address":
 							_address = Convert.ToInt64(arg, 16);
+							break;
+						case "arch":
+						case "architecture":
+							_architecture = arg;
 							break;
 						}
 					} else if (arg.StartsWith("-")) {

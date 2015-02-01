@@ -36,15 +36,11 @@
     <Reference Include="System.Collections.Immutable">
       <HintPath>..\packages\System.Collections.Immutable.1.1.33-beta\lib\portable-net45+win8+wp8+wpa81\System.Collections.Immutable.dll</HintPath>
     </Reference>
-    <Reference Include="System.Core" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Architecture\ARMMachineCodeReader.cs" />
     <Compile Include="Architecture\AMD64MachineCodeReader.cs" />
+    <Compile Include="BitHelper.cs" />
     <Compile Include="CodeWriter.cs" />
     <Compile Include="EnumerableExtensions.cs" />
     <Compile Include="Architecture\IMachineCodeReader.cs" />
