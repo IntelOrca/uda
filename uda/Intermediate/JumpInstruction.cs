@@ -2,7 +2,7 @@
 
 namespace uda.Intermediate
 {
-	internal class JumpInstruction : IJumpInstruction
+	internal class JumpInstruction : InstructionNodeBase, IJumpInstruction
 	{
 		private readonly long _address;
 

@@ -2,6 +2,8 @@
 {
 	internal enum InstructionType
 	{
+		Block,
+
 		// Low level instructions
 		ConditionalJump,
 		Jump,
@@ -10,6 +12,7 @@
 		Assignment,
 		Goto,
 		IfStatement,
+		While,
 		Return
 	}
 }

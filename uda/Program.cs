@@ -33,13 +33,15 @@ namespace uda
 				return;
 			}
 
-			// Create function and block table
+			// Create function and tree table
 			Function function = new Function();
 			function.Name = String.Format("sub_{0:X6}", _address);
-			function.BlockTable = BasicBlockTable.CreateFromInstructions(iis);
+			function.InstructionTreeTable = InstructionTreeTable.CreateFromInstructions(iis);
 
 			// Run decompile strategies
 			new LocalRenumberStrategy().Process(function);
+			new LoopFinderStrategy().Process(function);
+			new TreeInlinerStrategy().Process(function);
 
 			// Write out generated source code
 			CLanguageWriter langWriter = new CLanguageWriter();

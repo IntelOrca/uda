@@ -1,10 +1,10 @@
 ﻿namespace uda.Intermediate
 {
-	internal class ReturnInstruction : IInstruction
+	internal class ReturnStatement : InstructionNodeBase, IInstructionNode
 	{
 		public InstructionType Type { get { return InstructionType.Return; } }
 
-		public ReturnInstruction() { }
+		public ReturnStatement() { }
 
 		public override string ToString()
 		{

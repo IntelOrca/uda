@@ -14,19 +14,11 @@ namespace uda.Strategy
 
 		public void Process(Function function)
 		{
-			BasicBlockTable blockTable = function.BlockTable;
+			InstructionTreeTable treeTable = function.InstructionTreeTable;
 
 			List<LocalExpression> localExpressions = new List<LocalExpression>();
-			foreach (BasicBlock block in blockTable.Values) {
-				foreach (IInstruction instruction in block.Instructions) {
-					foreach (IExpression expr in Instruction.GetAllExpressions(instruction)) {
-						localExpressions.AddRange(Expression.GetFlattenedExpressionTree(expr)
-							.OfType<LocalExpression>()
-							.ToArray()
-						);
-					}
-				}
-			}
+			foreach (InstructionTree tree in treeTable)
+				localExpressions.AddRange(GetAllExpressionsInTree(tree).OfType<LocalExpression>());
 
 			int[] usedLocalIds = localExpressions
 				.Select(x => x.Id)
@@ -36,27 +28,37 @@ namespace uda.Strategy
 			for (int i = 0; i < usedLocalIds.Length; i++)
 				_idRemap[usedLocalIds[i]] = i;
 
-			foreach (long address in blockTable.Keys.ToArray())
-				blockTable[address] = RemapBasicBlock(blockTable[address]);
+			foreach (InstructionTree tree in treeTable.ToArray())
+				treeTable.Add(RemapTree(tree));
 		}
 
-		private BasicBlock RemapBasicBlock(BasicBlock basicBlock)
+		private IEnumerable<IExpression> GetAllExpressionsInTree(IInstructionNode node)
 		{
-			IReadOnlyList<IInstruction> originalInstructions = basicBlock.Instructions;
+			foreach (IExpression expr in Instruction.GetAllExpressions(node))
+				yield return expr;
 
-			var instructions = ImmutableArray.CreateBuilder<IInstruction>(originalInstructions.Count);
+			foreach (IInstructionNode child in node.Children)
+				foreach (IExpression expr in GetAllExpressionsInTree(child))
+					yield return expr;
+		}
+
+		private InstructionTree RemapTree(InstructionTree tree)
+		{
+			IReadOnlyList<IInstructionNode> originalInstructions = tree.Children;
+
+			var instructions = ImmutableArray.CreateBuilder<IInstructionNode>(originalInstructions.Count);
 			for (int i = 0; i < originalInstructions.Count; i++)
 				instructions.Add(RemapInstruction(originalInstructions[i]));
 
-			return new BasicBlock(basicBlock.BaseAddress, instructions.ToImmutable());
+			return new InstructionTree(tree.Address, instructions.ToImmutable());
 		}
 
-		private IInstruction RemapInstruction(IInstruction instruction)
+		private IInstructionNode RemapInstruction(IInstructionNode instruction)
 		{
 			switch (instruction.Type) {
 			case InstructionType.Assignment:
-				AssignmentInstruction assignInstr = (AssignmentInstruction)instruction;
-				return new AssignmentInstruction(
+				AssignmentStatement assignInstr = (AssignmentStatement)instruction;
+				return new AssignmentStatement(
 					(IWritableMemory)RemapExpressionTree((IExpression)assignInstr.Destination),
 					RemapExpressionTree(assignInstr.Value)
 				);
@@ -64,7 +66,7 @@ namespace uda.Strategy
 				IfStatement ifStatement = (IfStatement)instruction;
 				return new IfStatement(
 					RemapExpressionTree(ifStatement.FirstExpression),
-					ifStatement.FirstBlock
+					RemapInstruction(ifStatement.FirstChild)
 				);
 			default:
 				return instruction;

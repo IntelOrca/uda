@@ -5,17 +5,17 @@ namespace uda.Intermediate
 	internal class AddressInstructionPair
 	{
 		private readonly long? _address;
-		private readonly IInstruction _instruction;
+		private readonly IInstructionNode _instruction;
 
 		public long? Address { get { return _address; } }
-		public IInstruction Instruction { get { return _instruction; } }
+		public IInstructionNode Instruction { get { return _instruction; } }
 
-		public AddressInstructionPair(IInstruction instruction)
+		public AddressInstructionPair(IInstructionNode instruction)
 		{
 			_instruction = instruction;
 		}
 
-		public AddressInstructionPair(long address, IInstruction instruction)
+		public AddressInstructionPair(long address, IInstructionNode instruction)
 		{
 			_address = address;
 			_instruction = instruction;

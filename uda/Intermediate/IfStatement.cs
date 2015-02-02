@@ -3,33 +3,33 @@ using System.Collections.Immutable;
 
 namespace uda.Intermediate
 {
-	internal class IfStatement : IInstruction
+	internal class IfStatement : InstructionNodeBase, IInstructionNode
 	{
-		private readonly ImmutableArray<Tuple<IExpression, IBasicBlock>> _expressionBlockPairs;
-		private readonly IBasicBlock _elseBasicBlock;
+		private readonly ImmutableArray<Tuple<IExpression, IInstructionNode>> _expressionNodePairs;
+		private readonly IInstructionNode _elseChild;
 
 		public InstructionType Type { get { return InstructionType.IfStatement; } }
 
-		public ImmutableArray<Tuple<IExpression, IBasicBlock>> ExpressionBlockPairs { get { return _expressionBlockPairs; } }
-		public IBasicBlock ElseBlock { get { return _elseBasicBlock; } }
+		public ImmutableArray<Tuple<IExpression, IInstructionNode>> ExpressionNodePairs { get { return _expressionNodePairs; } }
+		public IInstructionNode ElseChild { get { return _elseChild; } }
 
-		public IExpression FirstExpression { get { return _expressionBlockPairs[0].Item1; } }
-		public IBasicBlock FirstBlock { get { return _expressionBlockPairs[0].Item2; } }
+		public IExpression FirstExpression { get { return _expressionNodePairs[0].Item1; } }
+		public IInstructionNode FirstChild { get { return _expressionNodePairs[0].Item2; } }
 
-		public IfStatement(IExpression expression, IBasicBlock basicBlock)
+		public IfStatement(IExpression expression, IInstructionNode child)
 		{
-			_expressionBlockPairs = ImmutableArray.Create(new Tuple<IExpression, IBasicBlock>(expression, basicBlock));
+			_expressionNodePairs = ImmutableArray.Create(new Tuple<IExpression, IInstructionNode>(expression, child));
 		}
 
-		public IfStatement(IExpression expression, IBasicBlock basicBlock, IBasicBlock elseBasicBlock)
+		public IfStatement(IExpression expression, IInstructionNode child, IInstructionNode elseChild)
 		{
-			_expressionBlockPairs = ImmutableArray.Create(new Tuple<IExpression, IBasicBlock>(expression, basicBlock));
-			_elseBasicBlock = elseBasicBlock;
+			_expressionNodePairs = ImmutableArray.Create(new Tuple<IExpression, IInstructionNode>(expression, child));
+			_elseChild = elseChild;
 		}
 
 		public override string ToString()
 		{
-			return String.Format("if ({0}) {1}", FirstExpression, FirstBlock);
+			return String.Format("if ({0}) {1}", FirstExpression, FirstChild);
 		}
 	}
 }

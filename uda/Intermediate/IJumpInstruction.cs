@@ -1,6 +1,6 @@
 ﻿namespace uda.Intermediate
 {
-	internal interface IJumpInstruction : IInstruction
+	internal interface IJumpInstruction : IInstructionNode
 	{
 		long Address { get; }
 	}

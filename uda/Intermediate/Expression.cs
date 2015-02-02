@@ -316,4 +316,25 @@ namespace uda.Intermediate
 			return "(" + _left + " != " + _right + ")";
 		}
 	}
+
+	internal class GreaterThanExpression : IBinaryExpression
+	{
+		private readonly IExpression _left, _right;
+
+		public IExpression Left { get { return _left; } }
+		public IExpression Right { get { return _right; } }
+
+		public GreaterThanExpression(IExpression left, IExpression right)
+		{
+			_left = left;
+			_right = right;
+		}
+
+		public IEnumerable<IExpression> Children { get { return new[] { _left, _right }; } }
+
+		public override string ToString()
+		{
+			return "(" + _left + " > " + _right + ")";
+		}
+	}
 }

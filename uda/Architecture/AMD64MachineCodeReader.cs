@@ -46,7 +46,7 @@ namespace uda.Architecture
 		public IEnumerable<AddressInstructionPair> Read(long startVirtualAddress)
 		{
 			long virtualAddress;
-			IInstruction[] iis;
+			IInstructionNode[] iis;
 
 			virtualAddress = startVirtualAddress;
 			_peFileStream.Seek(GetPhysicalAddress(startVirtualAddress), SeekOrigin.Begin);
@@ -62,7 +62,7 @@ namespace uda.Architecture
 			}
 		}
 
-		private IInstruction[] Read()
+		private IInstructionNode[] Read()
 		{
 			long virtualAddress = GetVirtualAddress(_peFileStream.Position);
 
@@ -108,7 +108,7 @@ namespace uda.Architecture
 				size = prefix == 0x66 ? 16 : 32;
 				return ReadMovRegImm(byte0 & 7, size, size);
 			case 0xC3:
-				return new [] { new ReturnInstruction() };
+				return new [] { new ReturnStatement() };
 			case 0xC6:
 				modRegRm = _peBinaryReader.ReadByte();
 				return ReadMovAddrImm(modRegRm & 7, 32, 8, 8);
@@ -117,18 +117,18 @@ namespace uda.Architecture
 			return null;
 		}
 
-		private IInstruction[] ReadDecReg(int regId, int regSize)
+		private IInstructionNode[] ReadDecReg(int regId, int regSize)
 		{
 			LocalExpression reg = GetRegister(regId, regSize);
 
 			string instr = String.Format("dec {0}", reg.OriginalName);
 			return new[] {
-				new AssignmentInstruction(reg, new SubtractExpression(reg, new LiteralExpression(1, regSize))),
-				new AssignmentInstruction(GetRegisterFlag(RegisterFlag.Zero), new EqualityExpression(reg, new LiteralExpression(0, regSize)))
+				new AssignmentStatement(reg, new SubtractExpression(reg, new LiteralExpression(1, regSize))),
+				new AssignmentStatement(GetRegisterFlag(RegisterFlag.Zero), new EqualityExpression(reg, new LiteralExpression(0, regSize)))
 			};
 		}
 
-		private IInstruction[] ReadJcc(ConditionalCode cc, int offsetSize)
+		private IInstructionNode[] ReadJcc(ConditionalCode cc, int offsetSize)
 		{
 			long offset;
 			switch (offsetSize) {
@@ -161,31 +161,31 @@ namespace uda.Architecture
 			return new[] { new ConditionalJumpInstruction(expression, address + offset) };
 		}
 
-		private IInstruction[] ReadAddRegImm(int regId, int regSize, int opSize)
+		private IInstructionNode[] ReadAddRegImm(int regId, int regSize, int opSize)
 		{
 			LocalExpression reg = GetRegister(regId, regSize);
 			LiteralExpression imm = ReadImmediate(opSize);
 
 			string instr = String.Format("add {0}, {1:X2}h", reg.OriginalName, imm);
-			return new[] { new AssignmentInstruction(reg, new AddExpression(reg, imm)) };
+			return new[] { new AssignmentStatement(reg, new AddExpression(reg, imm)) };
 		}
 
-		private IInstruction[] ReadMovRegImm(int regId, int regSize, int opSize)
+		private IInstructionNode[] ReadMovRegImm(int regId, int regSize, int opSize)
 		{
 			LocalExpression reg = GetRegister(regId, regSize);
 			LiteralExpression imm = ReadImmediate(opSize);
 
 			string instr = String.Format("mov {0}, {1:X2}h", reg.OriginalName, imm);
-			return new[] { new AssignmentInstruction(reg, imm) };
+			return new[] { new AssignmentStatement(reg, imm) };
 		}
 
-		private IInstruction[] ReadMovAddrImm(int regId, int regSize, int memSize, int opSize)
+		private IInstructionNode[] ReadMovAddrImm(int regId, int regSize, int memSize, int opSize)
 		{
 			LocalExpression reg = GetRegister(regId, regSize);
 			LiteralExpression imm = ReadImmediate(opSize);
 
 			string instr = String.Format("mov {0} ptr [{1}], {2:X2}h", GetSizeName(memSize), reg.OriginalName, imm);
-			return new[] { new AssignmentInstruction(new AddressOfExpression(reg), imm) };
+			return new[] { new AssignmentStatement(new AddressOfExpression(reg), imm) };
 		}
 
 		private LiteralExpression ReadImmediate(int size)

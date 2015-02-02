@@ -1,6 +1,6 @@
 ﻿namespace uda.Intermediate
 {
-	internal class AssignmentInstruction : IInstruction
+	internal class AssignmentStatement : InstructionNodeBase, IInstructionNode
 	{
 		private readonly IWritableMemory _destination;
 		private readonly IExpression _value;
@@ -9,7 +9,7 @@
 		public IWritableMemory Destination { get { return _destination; } }
 		public IExpression Value { get { return _value; } }
 
-		public AssignmentInstruction(IWritableMemory destination, IExpression value)
+		public AssignmentStatement(IWritableMemory destination, IExpression value)
 		{
 			_destination = destination;
 			_value = value;

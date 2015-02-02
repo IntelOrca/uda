@@ -7,8 +7,12 @@ namespace uda.Architecture
 {
 	internal class ARMMachineCodeReader : IMachineCodeReader, IDisposable
 	{
-		FileStream _peFileStream;
-		BinaryReader _peBinaryReader;
+		private FileStream _peFileStream;
+		private BinaryReader _peBinaryReader;
+
+		private HashSet<long> _readAddresses = new HashSet<long>();
+		private Queue<long> _branchAddesses = new Queue<long>();
+		private bool _endOfBranch;
 
 		/// <summary>
 		/// CCCC XXXX XXXX XXXX XXXX XXXX XXXX XXXX
@@ -45,6 +49,7 @@ namespace uda.Architecture
 		private enum RegisterFlag
 		{
 			Carry,
+			Negative,
 			Overflow,
 			Zero
 		}
@@ -62,45 +67,52 @@ namespace uda.Architecture
 
 		public IEnumerable<AddressInstructionPair> Read(long startAddress)
 		{
-			long address;
-			IInstruction[] iis;
+			_readAddresses.Clear();
+			_branchAddesses.Clear();
+			_branchAddesses.Enqueue(startAddress);
 
-			address = startAddress;
-			_peFileStream.Seek(address, SeekOrigin.Begin);
+			while (_branchAddesses.Count > 0) {
+				long address = _branchAddesses.Dequeue();
+				if (_readAddresses.Contains(address))
+					continue;
+				
+				_peFileStream.Seek(address, SeekOrigin.Begin);
 
-			while ((iis = Read()) != null) {
-				yield return new AddressInstructionPair(address, iis[0]);
-				for (int i = 1; i < iis.Length; i++)
-					yield return new AddressInstructionPair(iis[i]);
+				_endOfBranch = false;
 
-				address = _peFileStream.Position;
-				if (iis[0].Type == InstructionType.Return)
-					break;
+				IInstructionNode[] iis;
+				while ((iis = Read()) != null) {
+					_readAddresses.Add(address);
+
+					yield return new AddressInstructionPair(address, iis[0]);
+					for (int i = 1; i < iis.Length; i++)
+						yield return new AddressInstructionPair(iis[i]);
+
+					address = _peFileStream.Position;
+					if (_endOfBranch)
+						break;
+				}
 			}
 		}
 
-		private IInstruction[] Read()
+		private IInstructionNode[] Read()
 		{
-			long address = _peFileStream.Position;
 			int instruction = BitHelper.SwapEndian(_peBinaryReader.ReadInt32());
 
 			switch (GetInstructionType(instruction)) {
 			case ARMInstructionType.Arithmetic:
 				return ReadArithmetic(instruction);
 			case ARMInstructionType.LoadOrStore:
-				return ReadLoadStore(instruction);
+				return ReadLoadOrStore(instruction);
 			case ARMInstructionType.BlockOrBranch:
-				return null;
+				return ReadBranchOrBlock(instruction);
 			case ARMInstructionType.SoftwareInterrupt:
 				return null;
 			}
-
 			return null;
 		}
 
-
-
-		private IInstruction[] ReadArithmetic(int instruction)
+		private IInstructionNode[] ReadArithmetic(int instruction)
 		{
 			ArithmeticOpcode opcode = (ArithmeticOpcode)((instruction >> 21) & 0x0F);
 			bool setFlags = (instruction & (1 << 20)) != 0;
@@ -116,6 +128,10 @@ namespace uda.Architecture
 			case ArithmeticOpcode.ADD:
 				operation = new AddExpression(operand1, operand2);
 				break;
+			case ArithmeticOpcode.CMP:
+				return new[] {
+					new AssignmentStatement(GetRegisterFlag(RegisterFlag.Carry), new GreaterThanExpression(operand1, operand2))
+				};
 			case ArithmeticOpcode.ORR:
 				operation = new OrExpression(operand1, operand2);
 				break;
@@ -126,7 +142,7 @@ namespace uda.Architecture
 				return null;
 			}
 
-			return new[] { new AssignmentInstruction(destination, operation) };
+			return new[] { new AssignmentStatement(destination, operation) };
 		}
 
 		private IExpression GetOperand2(int instruction)
@@ -155,7 +171,7 @@ namespace uda.Architecture
 			}
 		}
 
-		private IInstruction[] ReadLoadStore(int instruction)
+		private IInstructionNode[] ReadLoadOrStore(int instruction)
 		{
 			bool isImmediateOffset = (instruction & (1 << 25)) == 0;
 			bool preIndex = (instruction & (1 << 24)) != 0;
@@ -172,13 +188,13 @@ namespace uda.Architecture
 			IExpression valueRegister = GetRegister(valueRegisterIndex, size);
 			IExpression source, target;
 
-			var result = new List<AssignmentInstruction>(2);
+			var result = new List<AssignmentStatement>(2);
 
 			IExpression offsetExpression = GetOffsetExpression(addressRegister, offset, addOffset);
 			if (preIndex) {
 				IExpression addressExpression;
 				if (writeback && offset != 0) {
-					result.Add(new AssignmentInstruction((IWritableMemory)addressRegister, offsetExpression));
+					result.Add(new AssignmentStatement((IWritableMemory)addressRegister, offsetExpression));
 					addressExpression = addressRegister;
 				} else {
 					addressExpression = offsetExpression;
@@ -190,7 +206,7 @@ namespace uda.Architecture
 					source = valueRegister;
 					target = new AddressOfExpression(addressExpression);
 				}
-				result.Add(new AssignmentInstruction((IWritableMemory)target, source));
+				result.Add(new AssignmentStatement((IWritableMemory)target, source));
 			} else {
 				if (isLoad) {
 					source = new AddressOfExpression(addressRegister);
@@ -199,9 +215,9 @@ namespace uda.Architecture
 					source = valueRegister;
 					target = new AddressOfExpression(addressRegister);
 				}
-				result.Add(new AssignmentInstruction((IWritableMemory)target, source));
+				result.Add(new AssignmentStatement((IWritableMemory)target, source));
 				if (writeback)
-					result.Add(new AssignmentInstruction((IWritableMemory)addressRegister, offsetExpression));
+					result.Add(new AssignmentStatement((IWritableMemory)addressRegister, offsetExpression));
 			}
 			return result.ToArray();
 		}
@@ -214,6 +230,41 @@ namespace uda.Architecture
 			return addOffset ?
 				(IExpression)new AddExpression(baseExpr, new LiteralExpression(offset)) :
 				(IExpression)new SubtractExpression(baseExpr, new LiteralExpression(offset));
+		}
+
+		private IInstructionNode[] ReadBranchOrBlock(int instruction)
+		{
+			bool isLink = (instruction & (1 << 24)) != 0;
+			int offset = instruction & 0xFFFFFF;
+
+			// Sign extend offset
+			if ((offset & 0x800000) != 0)
+				offset = (int)((uint)offset | 0xFF000000);
+
+			offset = (offset * 4) + 4;
+
+			long address = _peFileStream.Position + (long)offset;
+
+			_branchAddesses.Enqueue(address);
+
+			ConditionalCode cc = GetConditionCode(instruction);
+			switch (cc) {
+			case ConditionalCode.CS:
+				return new[] {
+					new ConditionalJumpInstruction(
+						new EqualityExpression(
+							GetRegisterFlag(RegisterFlag.Carry),
+							new LiteralExpression(1, 1)
+						),
+						address
+					)
+				};
+			case ConditionalCode.AL:
+				_endOfBranch = true;
+				return new[] { new JumpInstruction(address) };
+			default:
+				return null;
+			}
 		}
 
 		private ARMInstructionType GetInstructionType(int instruction)
@@ -234,8 +285,8 @@ namespace uda.Architecture
 
 		private static LocalExpression GetRegisterFlag(RegisterFlag flag)
 		{
-			string[] flagNames = new string[] { "cf", "of", "zf" };
-			return new LocalExpression(8 + (int)flag, null, flagNames[(int)flag], 0, 1);
+			string[] flagNames = new string[] { "cf", "nf", "of", "zf" };
+			return new LocalExpression(16 + (int)flag, null, flagNames[(int)flag], 0, 1);
 		}
 
 		private static string GetRegisterName(int id)

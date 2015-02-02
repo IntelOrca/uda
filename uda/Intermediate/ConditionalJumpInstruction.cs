@@ -2,7 +2,7 @@
 
 namespace uda.Intermediate
 {
-	internal class ConditionalJumpInstruction : IJumpInstruction
+	internal class ConditionalJumpInstruction : InstructionNodeBase, IJumpInstruction
 	{
 		private readonly IExpression _expression;
 		private readonly long _address;
