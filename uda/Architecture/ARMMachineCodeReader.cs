@@ -87,6 +87,12 @@ namespace uda.Architecture
 			switch (GetInstructionType(instruction)) {
 			case ARMInstructionType.Arithmetic:
 				return ReadArithmetic(instruction);
+			case ARMInstructionType.LoadOrStore:
+				return ReadLoadStore(instruction);
+			case ARMInstructionType.BlockOrBranch:
+				return null;
+			case ARMInstructionType.SoftwareInterrupt:
+				return null;
 			}
 
 			return null;
@@ -106,6 +112,9 @@ namespace uda.Architecture
 			switch (opcode) {
 			case ArithmeticOpcode.AND:
 				operation = new AndExpression(operand1, operand2);
+				break;
+			case ArithmeticOpcode.ADD:
+				operation = new AddExpression(operand1, operand2);
 				break;
 			case ArithmeticOpcode.ORR:
 				operation = new OrExpression(operand1, operand2);
@@ -144,6 +153,67 @@ namespace uda.Architecture
 
 				throw new InvalidOperationException();
 			}
+		}
+
+		private IInstruction[] ReadLoadStore(int instruction)
+		{
+			bool isImmediateOffset = (instruction & (1 << 25)) == 0;
+			bool preIndex = (instruction & (1 << 24)) != 0;
+			bool addOffset = (instruction & (1 << 23)) != 0;
+			bool byteAccess = (instruction & (1 << 22)) != 0;
+			bool writeback = (instruction & (1 << 21)) != 0;
+			bool isLoad = (instruction & (1 << 20)) != 0;
+			int addressRegisterIndex = (instruction >> 15) & 0x7;
+			int valueRegisterIndex = (instruction >> 12) & 0x7;
+			int offset = instruction & 0xFFF;
+
+			int size = byteAccess ? 8 : 32;
+			IExpression addressRegister = GetRegister(addressRegisterIndex, size);
+			IExpression valueRegister = GetRegister(valueRegisterIndex, size);
+			IExpression source, target;
+
+			var result = new List<AssignmentInstruction>(2);
+
+			IExpression offsetExpression = GetOffsetExpression(addressRegister, offset, addOffset);
+			if (preIndex) {
+				IExpression addressExpression;
+				if (writeback && offset != 0) {
+					result.Add(new AssignmentInstruction((IWritableMemory)addressRegister, offsetExpression));
+					addressExpression = addressRegister;
+				} else {
+					addressExpression = offsetExpression;
+				}
+				if (isLoad) {
+					source = new AddressOfExpression(addressExpression);
+					target = valueRegister;
+				} else {
+					source = valueRegister;
+					target = new AddressOfExpression(addressExpression);
+				}
+				result.Add(new AssignmentInstruction((IWritableMemory)target, source));
+			} else {
+				if (isLoad) {
+					source = new AddressOfExpression(addressRegister);
+					target = valueRegister;
+				} else {
+					source = valueRegister;
+					target = new AddressOfExpression(addressRegister);
+				}
+				result.Add(new AssignmentInstruction((IWritableMemory)target, source));
+				if (writeback)
+					result.Add(new AssignmentInstruction((IWritableMemory)addressRegister, offsetExpression));
+			}
+			return result.ToArray();
+		}
+
+		private IExpression GetOffsetExpression(IExpression baseExpr, int offset, bool addOffset)
+		{
+			if (offset == 0)
+				return baseExpr;
+
+			return addOffset ?
+				(IExpression)new AddExpression(baseExpr, new LiteralExpression(offset)) :
+				(IExpression)new SubtractExpression(baseExpr, new LiteralExpression(offset));
 		}
 
 		private ARMInstructionType GetInstructionType(int instruction)
