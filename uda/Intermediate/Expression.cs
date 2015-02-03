@@ -1,31 +1,50 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
+using uda.Core;
 
 namespace uda.Intermediate
 {
-	internal interface IExpression
+	internal interface IExpression : IGreenNode<IExpression> { }
+
+	internal interface INullaryExpression : IExpression { }
+
+	internal interface IUnaryExpression : IExpression
 	{
-		IEnumerable<IExpression> Children { get; }
+		IExpression Child { get; }
 	}
 
 	internal interface IBinaryExpression : IExpression
 	{
-		IExpression Left { get; }
-		IExpression Right { get; }
+		IExpression LeftChild { get; }
+		IExpression RightChild { get; }
 	}
 
 	internal static class Expression
 	{
+		public static IExpression[] GetAllExpressions(IInstructionNode instruction)
+		{
+			switch (instruction.Type) {
+			case InstructionType.Assignment:
+				AssignmentStatement assignInstr = (AssignmentStatement)instruction;
+				return new[] { (IExpression)assignInstr.Destination, assignInstr.Value };
+			case InstructionType.If:
+				IfStatement ifStatement = (IfStatement)instruction;
+				return ifStatement.ExpressionNodePairs.Select(x => x.Expression).ToArray();
+			default:
+				return new IExpression[0];
+			}
+		}
+
 		public static IEnumerable<IExpression> GetFlattenedExpressionTree(IExpression head)
 		{
-			IExpression[] children = head.Children.AsArray();
-			if (children.Length == 0) {
+			if (head.Children.Count == 0) {
 				yield return head;
 				yield break;
 			}
 
-			foreach (IExpression expr1 in children)
+			foreach (IExpression expr1 in head.Children)
 				foreach (IExpression expr2 in GetFlattenedExpressionTree(expr1))
 					yield return expr2;
 		}
@@ -41,7 +60,52 @@ namespace uda.Intermediate
 		}
 	}
 
-	internal class LiteralExpression : IExpression
+	internal abstract class ExpressionBase : GreenNode<IExpression>, IExpression
+	{
+		protected ExpressionBase() : base() { }
+		protected ExpressionBase(IExpression singleChild) : base(singleChild) { }
+		protected ExpressionBase(IEnumerable<IExpression> children) : base(children) { }
+		protected ExpressionBase(ImmutableArray<IExpression> children) : base(children) { }
+	}
+
+	internal abstract class NullaryExpressionBase : ExpressionBase, INullaryExpression
+	{
+		public override IExpression CreateFromChildren(ImmutableArray<IExpression> children)
+		{
+			return this;
+		}
+	}
+
+	internal abstract class UnaryExpressionBase : ExpressionBase, IUnaryExpression
+	{
+		private readonly IExpression _child;
+
+		public IExpression Child { get { return _child; } }
+
+		protected UnaryExpressionBase(IExpression child)
+			: base(child)
+		{
+			_child = child;
+		}
+	}
+
+	internal abstract class BinaryExpressionBase : ExpressionBase, IBinaryExpression
+	{
+		private readonly IExpression _leftChild;
+		private readonly IExpression _rightChild;
+
+		public IExpression LeftChild { get { return _leftChild; } }
+		public IExpression RightChild { get { return _rightChild; } }
+
+		protected BinaryExpressionBase(IExpression leftChild, IExpression rightChild)
+			: base(new[] { leftChild, rightChild })
+		{
+			_leftChild = leftChild;
+			_rightChild = rightChild;
+		}
+	}
+
+	internal class LiteralExpression : NullaryExpressionBase
 	{
 		private readonly long _value;
 		private readonly int _size;
@@ -78,34 +142,13 @@ namespace uda.Intermediate
 		public LiteralExpression(int value) : this(value, 32) { }
 		public LiteralExpression(long value) : this(value, 64) { }
 
-		public IEnumerable<IExpression> Children { get { return Enumerable.Empty<IExpression>(); } }
-
 		public override string ToString()
 		{
 			return _value.ToString();
 		}
 	}
 
-	internal class AddressOfExpression : IExpression, IWritableMemory
-	{
-		private readonly IExpression _child;
-
-		public IExpression Child { get { return _child; } }
-
-		public AddressOfExpression(IExpression child)
-		{
-			_child = child;
-		}
-
-		public IEnumerable<IExpression> Children { get { return new[] { _child }; } }
-
-		public override string ToString()
-		{
-			return "[" + _child + "]";
-		}
-	}
-
-	internal class LocalExpression : IExpression, IWritableMemory
+	internal class LocalExpression : NullaryExpressionBase, IWritableMemory
 	{
 		private readonly int _id;
 		private readonly string _name;
@@ -128,8 +171,6 @@ namespace uda.Intermediate
 			_width = width;
 		}
 
-		public IEnumerable<IExpression> Children { get { return Enumerable.Empty<IExpression>(); } }
-
 		public override string ToString()
 		{
 			if (String.IsNullOrEmpty(_name))
@@ -138,253 +179,198 @@ namespace uda.Intermediate
 		}
 	}
 
-	internal class AddExpression : IBinaryExpression
+	internal class AddressOfExpression : UnaryExpressionBase, IWritableMemory
 	{
-		private readonly IExpression _left, _right;
+		public AddressOfExpression(IExpression child) : base(child) { }
 
-		public IExpression Left { get { return _left; } }
-		public IExpression Right { get { return _right; } }
-
-		public AddExpression(IExpression left, IExpression right)
+		public override IExpression CreateFromChildren(ImmutableArray<IExpression> children)
 		{
-			_left = left;
-			_right = right;
+			return new AddressOfExpression(children[0]);
 		}
-
-		public IEnumerable<IExpression> Children { get { return new[] { _left, _right }; } }
 
 		public override string ToString()
 		{
-			return "(" + _left + " + " + _right + ")";
+			return "[" + Child + "]";
 		}
 	}
 
-	internal class SubtractExpression : IBinaryExpression
+	internal class AddExpression : BinaryExpressionBase
 	{
-		private readonly IExpression _left, _right;
+		public AddExpression(IExpression leftChild, IExpression rightChild) : base(leftChild, rightChild) { }
 
-		public IExpression Left { get { return _left; } }
-		public IExpression Right { get { return _right; } }
-
-		public SubtractExpression(IExpression left, IExpression right)
+		public override IExpression CreateFromChildren(ImmutableArray<IExpression> children)
 		{
-			_left = left;
-			_right = right;
+			return new AddExpression(children[0], children[1]);
 		}
-
-		public IEnumerable<IExpression> Children { get { return new[] { _left, _right }; } }
 
 		public override string ToString()
 		{
-			return "(" + _left + " - " + _right + ")";
+			return "(" + LeftChild + " + " + RightChild + ")";
 		}
 	}
 
-	internal class BooleanNotExpression : IExpression
+	internal class SubtractExpression : BinaryExpressionBase
 	{
-		private readonly IExpression _child;
+		public SubtractExpression(IExpression leftChild, IExpression rightChild) : base(leftChild, rightChild) { }
 
-		public IExpression Child { get { return _child; } }
-
-		public BooleanNotExpression(IExpression child)
+		public override IExpression CreateFromChildren(ImmutableArray<IExpression> children)
 		{
-			_child = child;
+			return new SubtractExpression(children[0], children[1]);
 		}
-
-		public IEnumerable<IExpression> Children { get { return new[] { _child }; } }
 
 		public override string ToString()
 		{
-			return "!" + _child;
+			return "(" + LeftChild + " - " + RightChild + ")";
 		}
 	}
 
-	internal class BitwiseAndExpression : IBinaryExpression
+	internal class BooleanNotExpression : UnaryExpressionBase
 	{
-		private readonly IExpression _left, _right;
+		public BooleanNotExpression(IExpression child) : base(child) { }
 
-		public IExpression Left { get { return _left; } }
-		public IExpression Right { get { return _right; } }
-
-		public BitwiseAndExpression(IExpression left, IExpression right)
+		public override IExpression CreateFromChildren(ImmutableArray<IExpression> children)
 		{
-			_left = left;
-			_right = right;
+			return new BooleanNotExpression(children[0]);
 		}
-
-		public IEnumerable<IExpression> Children { get { return new[] { _left, _right }; } }
 
 		public override string ToString()
 		{
-			return "(" + _left + " & " + _right + ")";
+			return "!" + Child;
 		}
 	}
 
-	internal class BitwiseOrExpression : IBinaryExpression
+	internal class BitwiseAndExpression : BinaryExpressionBase
 	{
-		private readonly IExpression _left, _right;
+		public BitwiseAndExpression(IExpression leftChild, IExpression rightChild) : base(leftChild, rightChild) { }
 
-		public IExpression Left { get { return _left; } }
-		public IExpression Right { get { return _right; } }
-
-		public BitwiseOrExpression(IExpression left, IExpression right)
+		public override IExpression CreateFromChildren(ImmutableArray<IExpression> children)
 		{
-			_left = left;
-			_right = right;
+			return new BitwiseAndExpression(children[0], children[1]);
 		}
-
-		public IEnumerable<IExpression> Children { get { return new[] { _left, _right }; } }
 
 		public override string ToString()
 		{
-			return "(" + _left + " | " + _right + ")";
+			return "(" + LeftChild + " & " + RightChild + ")";
 		}
 	}
 
-	internal class LogicalLeftShiftExpression : IBinaryExpression
+	internal class BitwiseOrExpression : BinaryExpressionBase
 	{
-		private readonly IExpression _left, _right;
+		public BitwiseOrExpression(IExpression leftChild, IExpression rightChild) : base(leftChild, rightChild) { }
 
-		public IExpression Left { get { return _left; } }
-		public IExpression Right { get { return _right; } }
-
-		public LogicalLeftShiftExpression(IExpression left, IExpression right)
+		public override IExpression CreateFromChildren(ImmutableArray<IExpression> children)
 		{
-			_left = left;
-			_right = right;
+			return new BitwiseOrExpression(children[0], children[1]);
 		}
-
-		public IEnumerable<IExpression> Children { get { return new[] { _left, _right }; } }
 
 		public override string ToString()
 		{
-			return "(" + _left + " << " + _right + ")";
+			return "(" + LeftChild + " | " + RightChild + ")";
 		}
 	}
 
-	internal class LogicalRightShiftExpression : IBinaryExpression
+	internal class LogicalLeftShiftExpression : BinaryExpressionBase
 	{
-		private readonly IExpression _left, _right;
+		public LogicalLeftShiftExpression(IExpression leftChild, IExpression rightChild) : base(leftChild, rightChild) { }
 
-		public IExpression Left { get { return _left; } }
-		public IExpression Right { get { return _right; } }
-
-		public LogicalRightShiftExpression(IExpression left, IExpression right)
+		public override IExpression CreateFromChildren(ImmutableArray<IExpression> children)
 		{
-			_left = left;
-			_right = right;
+			return new LogicalLeftShiftExpression(children[0], children[1]);
 		}
-
-		public IEnumerable<IExpression> Children { get { return new[] { _left, _right }; } }
 
 		public override string ToString()
 		{
-			return "(" + _left + " >> " + _right + ")";
+			return "(" + LeftChild + " << " + RightChild + ")";
 		}
 	}
 
-	internal class ArithmeticRightShiftExpression : IBinaryExpression
+	internal class LogicalRightShiftExpression : BinaryExpressionBase
 	{
-		private readonly IExpression _left, _right;
+		public LogicalRightShiftExpression(IExpression leftChild, IExpression rightChild) : base(leftChild, rightChild) { }
 
-		public IExpression Left { get { return _left; } }
-		public IExpression Right { get { return _right; } }
-
-		public ArithmeticRightShiftExpression(IExpression left, IExpression right)
+		public override IExpression CreateFromChildren(ImmutableArray<IExpression> children)
 		{
-			_left = left;
-			_right = right;
+			return new LogicalRightShiftExpression(children[0], children[1]);
 		}
-
-		public IEnumerable<IExpression> Children { get { return new[] { _left, _right }; } }
 
 		public override string ToString()
 		{
-			return "(" + _left + " >> " + _right + ")";
+			return "(" + LeftChild + " >> " + RightChild + ")";
 		}
 	}
 
-	internal class RotateRightShiftExpression : IBinaryExpression
+	internal class ArithmeticRightShiftExpression : BinaryExpressionBase
 	{
-		private readonly IExpression _left, _right;
+		public ArithmeticRightShiftExpression(IExpression leftChild, IExpression rightChild) : base(leftChild, rightChild) { }
 
-		public IExpression Left { get { return _left; } }
-		public IExpression Right { get { return _right; } }
-
-		public RotateRightShiftExpression(IExpression left, IExpression right)
+		public override IExpression CreateFromChildren(ImmutableArray<IExpression> children)
 		{
-			_left = left;
-			_right = right;
+			return new ArithmeticRightShiftExpression(children[0], children[1]);
 		}
-
-		public IEnumerable<IExpression> Children { get { return new[] { _left, _right }; } }
 
 		public override string ToString()
 		{
-			return "(" + _left + " >>> " + _right + ")";
+			return "(" + LeftChild + " >> " + RightChild + ")";
 		}
 	}
 
-	internal class EqualityExpression : IBinaryExpression
+	internal class RotateRightShiftExpression : BinaryExpressionBase
 	{
-		private readonly IExpression _left, _right;
+		public RotateRightShiftExpression(IExpression leftChild, IExpression rightChild) : base(leftChild, rightChild) { }
 
-		public IExpression Left { get { return _left; } }
-		public IExpression Right { get { return _right; } }
-
-		public EqualityExpression(IExpression left, IExpression right)
+		public override IExpression CreateFromChildren(ImmutableArray<IExpression> children)
 		{
-			_left = left;
-			_right = right;
+			return new RotateRightShiftExpression(children[0], children[1]);
 		}
-
-		public IEnumerable<IExpression> Children { get { return new[] { _left, _right }; } }
 
 		public override string ToString()
 		{
-			return "(" + _left + " == " + _right + ")";
+			return "(" + LeftChild + " >>> " + RightChild + ")";
 		}
 	}
 
-	internal class InequalityExpression : IBinaryExpression
+	internal class EqualityExpression : BinaryExpressionBase
 	{
-		private readonly IExpression _left, _right;
+		public EqualityExpression(IExpression leftChild, IExpression rightChild) : base(leftChild, rightChild) { }
 
-		public IExpression Left { get { return _left; } }
-		public IExpression Right { get { return _right; } }
-
-		public InequalityExpression(IExpression left, IExpression right)
+		public override IExpression CreateFromChildren(ImmutableArray<IExpression> children)
 		{
-			_left = left;
-			_right = right;
+			return new EqualityExpression(children[0], children[1]);
 		}
-
-		public IEnumerable<IExpression> Children { get { return new[] { _left, _right }; } }
 
 		public override string ToString()
 		{
-			return "(" + _left + " != " + _right + ")";
+			return "(" + LeftChild + " == " + RightChild + ")";
 		}
 	}
 
-	internal class GreaterThanExpression : IBinaryExpression
+	internal class InequalityExpression : BinaryExpressionBase
 	{
-		private readonly IExpression _left, _right;
+		public InequalityExpression(IExpression leftChild, IExpression rightChild) : base(leftChild, rightChild) { }
 
-		public IExpression Left { get { return _left; } }
-		public IExpression Right { get { return _right; } }
-
-		public GreaterThanExpression(IExpression left, IExpression right)
+		public override IExpression CreateFromChildren(ImmutableArray<IExpression> children)
 		{
-			_left = left;
-			_right = right;
+			return new InequalityExpression(children[0], children[1]);
 		}
-
-		public IEnumerable<IExpression> Children { get { return new[] { _left, _right }; } }
 
 		public override string ToString()
 		{
-			return "(" + _left + " > " + _right + ")";
+			return "(" + LeftChild + " != " + RightChild + ")";
+		}
+	}
+
+	internal class GreaterThanExpression : BinaryExpressionBase
+	{
+		public GreaterThanExpression(IExpression leftChild, IExpression rightChild) : base(leftChild, rightChild) { }
+
+		public override IExpression CreateFromChildren(ImmutableArray<IExpression> children)
+		{
+			return new GreaterThanExpression(children[0], children[1]);
+		}
+
+		public override string ToString()
+		{
+			return "(" + LeftChild + " > " + RightChild + ")";
 		}
 	}
 }

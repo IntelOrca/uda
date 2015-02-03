@@ -40,10 +40,14 @@ namespace uda
 
 			// Run decompile strategies
 			new LocalRenumberStrategy().Process(function);
+			function.InstructionTreeTable.Clean();
 			new LoopFinderStrategy().Process(function);
+			function.InstructionTreeTable.Clean();
 			new TreeInlinerStrategy().Process(function);
 			function.InstructionTreeTable.Clean();
 			new LoopBreakerStrategy().Process(function);
+			function.InstructionTreeTable.Clean();
+			new LocalSubsitutionStrategy().Process(function);
 
 			// Write out generated source code
 			CLanguageWriter langWriter = new CLanguageWriter();

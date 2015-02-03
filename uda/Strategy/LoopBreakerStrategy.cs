@@ -23,8 +23,8 @@ namespace uda.Strategy
 		private IInstructionNode Process(IInstructionNode node)
 		{
 			if (node.Type != InstructionType.While) {
-				foreach (IInstructionNode child in node)
-					node = node.ReplaceChild(child, Process(child));
+				for (int i = 0; i < node.Children.Count; i++)
+					node = node.ReplaceChild(i, Process(node.Children[i]));
 				return node;
 			}
 

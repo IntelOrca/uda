@@ -2,7 +2,7 @@
 
 namespace uda.Intermediate
 {
-	internal class AssignmentStatement : InstructionNodeBase, IInstructionNode
+	internal class AssignmentStatement : ChildlessInstructionNodeBase, IInstructionNode
 	{
 		private readonly IWritableMemory _destination;
 		private readonly IExpression _value;
@@ -15,11 +15,6 @@ namespace uda.Intermediate
 		{
 			_destination = destination;
 			_value = value;
-		}
-
-		public override IInstructionNode CreateFromChildren(ImmutableArray<IInstructionNode> children)
-		{
-			return this;
 		}
 
 		public override string ToString()

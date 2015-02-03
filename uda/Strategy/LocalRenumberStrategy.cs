@@ -34,7 +34,7 @@ namespace uda.Strategy
 
 		private IEnumerable<IExpression> GetAllExpressionsInTree(IInstructionNode node)
 		{
-			foreach (IExpression expr in Instruction.GetAllExpressions(node))
+			foreach (IExpression expr in Expression.GetAllExpressions(node))
 				yield return expr;
 
 			foreach (IInstructionNode child in node.Children)
@@ -82,16 +82,16 @@ namespace uda.Strategy
 				return new AddressOfExpression(RemapExpressionTree(expr.Child));
 			} else if (tree is AddExpression) {
 				AddExpression expr = (AddExpression)tree;
-				return new AddExpression(RemapExpressionTree(expr.Left), RemapExpressionTree(expr.Right));
+				return new AddExpression(RemapExpressionTree(expr.LeftChild), RemapExpressionTree(expr.RightChild));
 			} else if (tree is SubtractExpression) {
 				SubtractExpression expr = (SubtractExpression)tree;
-				return new SubtractExpression(RemapExpressionTree(expr.Left), RemapExpressionTree(expr.Right));
+				return new SubtractExpression(RemapExpressionTree(expr.LeftChild), RemapExpressionTree(expr.RightChild));
 			} else if (tree is EqualityExpression) {
 				EqualityExpression expr = (EqualityExpression)tree;
-				return new EqualityExpression(RemapExpressionTree(expr.Left), RemapExpressionTree(expr.Right));
+				return new EqualityExpression(RemapExpressionTree(expr.LeftChild), RemapExpressionTree(expr.RightChild));
 			} else if (tree is InequalityExpression) {
 				InequalityExpression expr = (InequalityExpression)tree;
-				return new InequalityExpression(RemapExpressionTree(expr.Left), RemapExpressionTree(expr.Right));
+				return new InequalityExpression(RemapExpressionTree(expr.LeftChild), RemapExpressionTree(expr.RightChild));
 			} else {
 				return tree;
 			}

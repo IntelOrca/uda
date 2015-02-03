@@ -3,7 +3,7 @@ using System.Collections.Immutable;
 
 namespace uda.Intermediate
 {
-	internal class ConditionalJumpInstruction : InstructionNodeBase, IJumpInstruction
+	internal class ConditionalJumpInstruction : ChildlessInstructionNodeBase, IJumpInstruction
 	{
 		private readonly IExpression _expression;
 		private readonly long _address;
@@ -16,11 +16,6 @@ namespace uda.Intermediate
 		{
 			_expression = expression;
 			_address = address;
-		}
-
-		public override IInstructionNode CreateFromChildren(ImmutableArray<IInstructionNode> children)
-		{
-			return this;
 		}
 
 		public override string ToString()

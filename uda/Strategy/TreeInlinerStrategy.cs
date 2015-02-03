@@ -49,8 +49,8 @@ namespace uda.Strategy
 			if (treeReference != null && treeReference.Address == treeToInline.Address)
 				return new InstructionNode(treeToInline.Children);
 
-			foreach (IInstructionNode child in node.Children)
-				node = node.ReplaceChild(child, InlineTree(child, treeToInline));
+			for (int i = 0; i < node.Children.Count; i++)
+				node = node.ReplaceChild(i, InlineTree(node.Children[i], treeToInline));
 
 			return node;
 		}

@@ -4,7 +4,7 @@ using System.Collections.Immutable;
 
 namespace uda.Intermediate
 {
-	internal class InstructionTreeReference : InstructionNodeBase, IInstructionNode
+	internal class InstructionTreeReference : ChildlessInstructionNodeBase, IInstructionNode
 	{
 		private readonly InstructionTreeTable _instructionTreeTable;
 		private readonly long _address;
@@ -16,11 +16,6 @@ namespace uda.Intermediate
 		{
 			_instructionTreeTable = instructionTreeTable;
 			_address = address;
-		}
-
-		public override IInstructionNode CreateFromChildren(ImmutableArray<IInstructionNode> children)
-		{
-			return this;
 		}
 
 		public override string ToString()

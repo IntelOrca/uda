@@ -42,10 +42,12 @@
     <Compile Include="Architecture\AMD64MachineCodeReader.cs" />
     <Compile Include="BitHelper.cs" />
     <Compile Include="CodeWriter.cs" />
+    <Compile Include="Core\GreenNode.cs" />
     <Compile Include="EnumerableExtensions.cs" />
     <Compile Include="Architecture\IMachineCodeReader.cs" />
     <Compile Include="Intermediate\AddressInstructionPair.cs" />
     <Compile Include="Intermediate\AssignmentStatement.cs" />
+    <Compile Include="Intermediate\ChildlessInstructionNodeBase.cs" />
     <Compile Include="Intermediate\InstructionNodeBase.cs" />
     <Compile Include="Intermediate\InstructionNode.cs" />
     <Compile Include="Intermediate\InstructionTreeReference.cs" />
@@ -56,7 +58,6 @@
     <Compile Include="Intermediate\IInstructionNode.cs" />
     <Compile Include="Intermediate\IfStatement.cs" />
     <Compile Include="Intermediate\IJumpInstruction.cs" />
-    <Compile Include="Intermediate\Instruction.cs" />
     <Compile Include="Intermediate\InstructionTree.cs" />
     <Compile Include="Intermediate\InstructionType.cs" />
     <Compile Include="Intermediate\IWritableMemory.cs" />
@@ -70,6 +71,7 @@
     <Compile Include="Language\ILanguageWriter.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Strategy\LocalSubsitutionStrategy.cs" />
     <Compile Include="Strategy\LoopBreakerStrategy.cs" />
     <Compile Include="Strategy\TreeInlinerStrategy.cs" />
     <Compile Include="Strategy\IDecompileStrategy.cs" />
