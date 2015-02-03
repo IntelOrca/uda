@@ -64,12 +64,14 @@
     <Compile Include="Intermediate\GotoStatement.cs" />
     <Compile Include="Intermediate\JumpInstruction.cs" />
     <Compile Include="Intermediate\ReturnStatement.cs" />
+    <Compile Include="Intermediate\DoWhileStatement.cs" />
     <Compile Include="Intermediate\WhileStatement.cs" />
     <Compile Include="Language\CLanguageWriter.cs" />
     <Compile Include="Language\ILanguageWriter.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Strategy\BlockInlinerStrategy.cs" />
+    <Compile Include="Strategy\LoopBreakerStrategy.cs" />
+    <Compile Include="Strategy\TreeInlinerStrategy.cs" />
     <Compile Include="Strategy\IDecompileStrategy.cs" />
     <Compile Include="Strategy\LocalRenumberStrategy.cs" />
     <Compile Include="Strategy\LoopFinderStrategy.cs" />

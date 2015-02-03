@@ -10,9 +10,9 @@ namespace uda.Intermediate
 			case InstructionType.Assignment:
 				AssignmentStatement assignInstr = (AssignmentStatement)instruction;
 				return new[] { (IExpression)assignInstr.Destination, assignInstr.Value };
-			case InstructionType.IfStatement:
+			case InstructionType.If:
 				IfStatement ifStatement = (IfStatement)instruction;
-				return ifStatement.ExpressionNodePairs.Select(x => x.Item1).ToArray();
+				return ifStatement.ExpressionNodePairs.Select(x => x.Expression).ToArray();
 			default:
 				return new IExpression[0];
 			}

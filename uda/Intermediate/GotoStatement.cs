@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Collections.Immutable;
 
 namespace uda.Intermediate
 {
@@ -12,6 +13,11 @@ namespace uda.Intermediate
 		public GotoStatement(InstructionTreeReference child) : base(child)
 		{
 			_child = child;
+		}
+
+		public override IInstructionNode CreateFromChildren(ImmutableArray<IInstructionNode> children)
+		{
+			return new InstructionNode(children);
 		}
 
 		public override string ToString()

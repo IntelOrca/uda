@@ -10,8 +10,9 @@
 
 		// High level instructions
 		Assignment,
+		Do,
 		Goto,
-		IfStatement,
+		If,
 		While,
 		Return
 	}

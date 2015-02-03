@@ -62,7 +62,7 @@ namespace uda.Strategy
 					(IWritableMemory)RemapExpressionTree((IExpression)assignInstr.Destination),
 					RemapExpressionTree(assignInstr.Value)
 				);
-			case InstructionType.IfStatement:
+			case InstructionType.If:
 				IfStatement ifStatement = (IfStatement)instruction;
 				return new IfStatement(
 					RemapExpressionTree(ifStatement.FirstExpression),

@@ -16,11 +16,22 @@ namespace uda.Intermediate
 		public void Add(InstructionTree tree)
 		{
 			_instructionTrees[tree.Address] = tree;
+			if (EntryTree != null && EntryTree.Address == tree.Address)
+				EntryTree = tree;
 		}
 
 		public void Remove(long address)
 		{
 			_instructionTrees.Remove(address);
+		}
+
+		public void Clean()
+		{
+			foreach (InstructionTree tree in _instructionTrees.Values.ToArray()) {
+				IInstructionNode cleanTree = InstructionNode.Clean(tree);
+				if (tree != cleanTree)
+					Add((InstructionTree)cleanTree);
+			}
 		}
 
 		public IEnumerator<InstructionTree> GetEnumerator() { return _instructionTrees.Values.GetEnumerator(); }

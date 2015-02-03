@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 
 namespace uda.Intermediate
 {
@@ -15,6 +16,11 @@ namespace uda.Intermediate
 		{
 			_instructionTreeTable = instructionTreeTable;
 			_address = address;
+		}
+
+		public override IInstructionNode CreateFromChildren(ImmutableArray<IInstructionNode> children)
+		{
+			return this;
 		}
 
 		public override string ToString()

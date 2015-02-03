@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 
 namespace uda.Intermediate
@@ -23,6 +24,16 @@ namespace uda.Intermediate
 		public InstructionTree(long address, ImmutableArray<IInstructionNode> children) : base(children)
 		{
 			_address = address;
+		}
+
+		public override IInstructionNode CreateFromChildren(ImmutableArray<IInstructionNode> children)
+		{
+			return new InstructionTree(_address, children);
+		}
+
+		public override string ToString()
+		{
+			return String.Format("Tree 0x{0:X6}", _address);
 		}
 	}
 }

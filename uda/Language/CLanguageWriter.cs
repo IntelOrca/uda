@@ -1,10 +1,23 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using uda.Intermediate;
 
 namespace uda.Language
 {
 	internal class CLanguageWriter : ILanguageWriter
 	{
+		private static void OpenBrace(CodeWriter cw)
+		{
+			cw.AppendLine("{");
+			cw.BeginIndent();
+		}
+
+		private static void CloseBrace(CodeWriter cw)
+		{
+			cw.EndIndent();
+			cw.AppendLine("}");
+		}
+
 		private void WriteNode(CodeWriter cw, IInstructionNode node)
 		{
 			if (node is InstructionTreeReference) {
@@ -21,18 +34,24 @@ namespace uda.Language
 				foreach (IInstructionNode child in node.Children)
 					WriteNode(cw, child);
 				break;
+			case InstructionType.Do:
+				DoWhileStatement doInstr = (DoWhileStatement)node;
+				cw.AppendLine("do");
+				OpenBrace(cw);
+				WriteNode(cw, doInstr.Child);
+				cw.EndIndent();
+				cw.AppendLine("}} while ({0});", doInstr.Expression);
+				break;
 			case InstructionType.Goto:
 				GotoStatement gotoInstr = (GotoStatement)node;
 				cw.AppendLine("goto loc_{0:X6};", gotoInstr.Child.Address);
 				break;
-			case InstructionType.IfStatement:
+			case InstructionType.If:
 				IfStatement ifStatement = (IfStatement)node;
 				cw.AppendLine("if ({0})", ifStatement.FirstExpression);
-				cw.AppendLine("{");
-				cw.BeginIndent();
+				OpenBrace(cw);
 				WriteNode(cw, ifStatement.FirstChild);
-				cw.EndIndent();
-				cw.AppendLine("}");
+				CloseBrace(cw);
 				break;
 			case InstructionType.Return:
 				cw.AppendLine("return;");
@@ -43,21 +62,21 @@ namespace uda.Language
 					cw.AppendLine("while ({0}) {{ }}", whileStatement.Expression);
 				} else {
 					cw.AppendLine("while ({0})", whileStatement.Expression);
-					cw.AppendLine("{");
-					cw.BeginIndent();
+					OpenBrace(cw);
 					WriteNode(cw, whileStatement.Child);
-					cw.EndIndent();
-					cw.AppendLine("}");
+					CloseBrace(cw);
 				}
 				break;
 			}
 		}
 
-		private void WriteTree(CodeWriter cw, InstructionTree tree, InstructionTree nextTree = null)
+		private void WriteTree(CodeWriter cw, InstructionTree tree, InstructionTree nextTree = null, bool omitLabel = false)
 		{
-			cw.EndIndent();
-			cw.AppendLine("loc_{0:X6}:", tree.Address);
-			cw.BeginIndent();
+			if (!omitLabel) {
+				cw.EndIndent();
+				cw.AppendLine("loc_{0:X6}:", tree.Address);
+				cw.BeginIndent();
+			}
 
 			for (int i = 0; i < tree.Children.Count; i++) {
 				IInstructionNode instruction = tree.Children[i];
@@ -81,16 +100,16 @@ namespace uda.Language
 
 			var cw = new CodeWriter();
 			cw.AppendLine("void {0}()", function.Name);
-			cw.AppendLine("{");
-			cw.BeginIndent();
+			OpenBrace(cw);
 
-			InstructionTree[] trees = function.InstructionTreeTable.ToArray();
-			for (int i = 0; i < trees.Length; i++) {
-				WriteTree(cw, trees[i], i != trees.Length - 1 ? trees[i + 1] : null);
-			}
+			List<InstructionTree> trees = function.InstructionTreeTable.ToList();
+			trees.Remove(entryTree);
+			trees.Insert(0, entryTree);
 
-			cw.EndIndent();
-			cw.AppendLine("}");
+			for (int i = 0; i < trees.Count; i++)
+				WriteTree(cw, trees[i], i != trees.Count - 1 ? trees[i + 1] : null, i == 0);
+
+			CloseBrace(cw);
 
 			return cw.ToString();
 		}

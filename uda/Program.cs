@@ -42,6 +42,8 @@ namespace uda
 			new LocalRenumberStrategy().Process(function);
 			new LoopFinderStrategy().Process(function);
 			new TreeInlinerStrategy().Process(function);
+			function.InstructionTreeTable.Clean();
+			new LoopBreakerStrategy().Process(function);
 
 			// Write out generated source code
 			CLanguageWriter langWriter = new CLanguageWriter();

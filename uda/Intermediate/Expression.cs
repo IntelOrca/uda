@@ -29,12 +29,43 @@ namespace uda.Intermediate
 				foreach (IExpression expr2 in GetFlattenedExpressionTree(expr1))
 					yield return expr2;
 		}
+
+		public static bool IsTautology(IExpression expression)
+		{
+			if (expression is LiteralExpression) {
+				LiteralExpression literalExpression = (LiteralExpression)expression;
+				return literalExpression.ValueUnsigned != 0;
+			}
+
+			return false;
+		}
 	}
 
 	internal class LiteralExpression : IExpression
 	{
 		private readonly long _value;
 		private readonly int _size;
+
+		public int Size { get { return _size; } }
+
+		public ulong ValueUnsigned
+		{
+			get
+			{
+				return (ulong)(_value & ((1 << _size) - 1));
+			}
+		}
+
+		public long ValueSigned
+		{
+			get
+			{
+				long result = _value & ((1 << _size) - 1);
+				if ((result & (1 << (_size - 1))) != 0)
+					result = (long)((ulong)result | ~(ulong)((1 << _size) - 1));
+				return result;
+			}
+		}
 
 		public LiteralExpression(long value, int size)
 		{
@@ -149,14 +180,33 @@ namespace uda.Intermediate
 		}
 	}
 
-	internal class AndExpression : IBinaryExpression
+	internal class BooleanNotExpression : IExpression
+	{
+		private readonly IExpression _child;
+
+		public IExpression Child { get { return _child; } }
+
+		public BooleanNotExpression(IExpression child)
+		{
+			_child = child;
+		}
+
+		public IEnumerable<IExpression> Children { get { return new[] { _child }; } }
+
+		public override string ToString()
+		{
+			return "!" + _child;
+		}
+	}
+
+	internal class BitwiseAndExpression : IBinaryExpression
 	{
 		private readonly IExpression _left, _right;
 
 		public IExpression Left { get { return _left; } }
 		public IExpression Right { get { return _right; } }
 
-		public AndExpression(IExpression left, IExpression right)
+		public BitwiseAndExpression(IExpression left, IExpression right)
 		{
 			_left = left;
 			_right = right;
@@ -170,14 +220,14 @@ namespace uda.Intermediate
 		}
 	}
 
-	internal class OrExpression : IBinaryExpression
+	internal class BitwiseOrExpression : IBinaryExpression
 	{
 		private readonly IExpression _left, _right;
 
 		public IExpression Left { get { return _left; } }
 		public IExpression Right { get { return _right; } }
 
-		public OrExpression(IExpression left, IExpression right)
+		public BitwiseOrExpression(IExpression left, IExpression right)
 		{
 			_left = left;
 			_right = right;

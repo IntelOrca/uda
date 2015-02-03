@@ -1,4 +1,6 @@
-﻿namespace uda.Intermediate
+﻿using System.Collections.Immutable;
+
+namespace uda.Intermediate
 {
 	internal class AssignmentStatement : InstructionNodeBase, IInstructionNode
 	{
@@ -13,6 +15,11 @@
 		{
 			_destination = destination;
 			_value = value;
+		}
+
+		public override IInstructionNode CreateFromChildren(ImmutableArray<IInstructionNode> children)
+		{
+			return this;
 		}
 
 		public override string ToString()

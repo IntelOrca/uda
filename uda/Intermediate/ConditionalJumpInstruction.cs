@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Immutable;
 
 namespace uda.Intermediate
 {
@@ -15,6 +16,11 @@ namespace uda.Intermediate
 		{
 			_expression = expression;
 			_address = address;
+		}
+
+		public override IInstructionNode CreateFromChildren(ImmutableArray<IInstructionNode> children)
+		{
+			return this;
 		}
 
 		public override string ToString()

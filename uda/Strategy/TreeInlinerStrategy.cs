@@ -24,49 +24,35 @@ namespace uda.Strategy
 				.Select(x => x.Key)
 				.ToHashSet();
 
+			InstructionTree[] singleTrees = treeTable
+				.Where(x => _treeReferences.ContainsKey(x.Address))
+				.ToArray();
+
 			foreach (InstructionTree tree in treeTable.ToArray()) {
 				if (singleTreeReferences.Contains(tree.Address))
 					continue;
 
-				bool remakeTree = false;
-				var newInstructions = ImmutableArray.CreateBuilder<IInstructionNode>(tree.Children.Count);
-				foreach (IInstructionNode instruction in tree.Children) {
-					IInstructionNode newInstruction = instruction;
+				IInstructionNode newTree = tree;
+				foreach (InstructionTree treeToInline in singleTrees)
+					newTree = InlineTree(newTree, treeToInline);
 
-					InstructionTreeReference treeReference;
-					switch (instruction.Type) {
-					case InstructionType.Goto:
-						GotoStatement gotoStatement = (GotoStatement)instruction;
-						treeReference = gotoStatement.Child as InstructionTreeReference;
-						if (treeReference != null && singleTreeReferences.Contains(treeReference.Address)) {
-							foreach (IInstructionNode subTreeInstruction in treeTable[treeReference.Address].Children)
-								newInstructions.Add(subTreeInstruction);
-							newInstruction = null;
-							remakeTree = true;
-						}
-						break;
-					case InstructionType.IfStatement:
-						IfStatement ifStatement = ((IfStatement)instruction);
-						treeReference = ifStatement.FirstChild as InstructionTreeReference;
-						if (treeReference != null && singleTreeReferences.Contains(treeReference.Address)) {
-							newInstruction = new IfStatement(ifStatement.FirstExpression, new InstructionNode(treeTable[treeReference.Address].Children));
-							remakeTree = true;
-						}
-						break;
-					case InstructionType.While:
-						break;
-					}
-
-					if (newInstruction != null)
-						newInstructions.Add(newInstruction);
-				}
-
-				if (remakeTree)
-					treeTable.Add(new InstructionTree(tree.Address, newInstructions.ToImmutable()));
+				treeTable.Add((InstructionTree)newTree);
 			}
 
 			foreach (long address in singleTreeReferences)
 				treeTable.Remove(address);
+		}
+
+		private IInstructionNode InlineTree(IInstructionNode node, InstructionTree treeToInline)
+		{
+			InstructionTreeReference treeReference = node as InstructionTreeReference;
+			if (treeReference != null && treeReference.Address == treeToInline.Address)
+				return new InstructionNode(treeToInline.Children);
+
+			foreach (IInstructionNode child in node.Children)
+				node = node.ReplaceChild(child, InlineTree(child, treeToInline));
+
+			return node;
 		}
 
 		private void FindTreeReferences(IInstructionNode node)

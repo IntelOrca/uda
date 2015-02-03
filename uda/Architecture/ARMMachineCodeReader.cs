@@ -123,7 +123,7 @@ namespace uda.Architecture
 
 			switch (opcode) {
 			case ArithmeticOpcode.AND:
-				operation = new AndExpression(operand1, operand2);
+				operation = new BitwiseAndExpression(operand1, operand2);
 				break;
 			case ArithmeticOpcode.ADD:
 				operation = new AddExpression(operand1, operand2);
@@ -133,7 +133,7 @@ namespace uda.Architecture
 					new AssignmentStatement(GetRegisterFlag(RegisterFlag.Carry), new GreaterThanExpression(operand1, operand2))
 				};
 			case ArithmeticOpcode.ORR:
-				operation = new OrExpression(operand1, operand2);
+				operation = new BitwiseOrExpression(operand1, operand2);
 				break;
 			case ArithmeticOpcode.MOV:
 				operation = operand2;

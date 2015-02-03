@@ -21,6 +21,21 @@ namespace uda.Intermediate
 			_children = children;
 		}
 
+		public IInstructionNode ReplaceChild(int index, IInstructionNode newNode)
+		{
+			return ReplaceChild(_children[index], newNode);
+		}
+
+		public IInstructionNode ReplaceChild(IInstructionNode oldNode, IInstructionNode newNode)
+		{
+			if (oldNode == newNode)
+				return (IInstructionNode)this;
+
+			return CreateFromChildren(_children.Replace(oldNode, newNode));
+		}
+
+		public abstract IInstructionNode CreateFromChildren(ImmutableArray<IInstructionNode> children);
+
 		public IEnumerator<IInstructionNode> GetEnumerator() { return _children.AsEnumerable().GetEnumerator(); }
 
 		IEnumerator IEnumerable.GetEnumerator() { return GetEnumerator(); }

@@ -23,6 +23,11 @@ namespace uda
 			return items.ToImmutableArray();
 		}
 
+		public static IEnumerable<T> ExceptNulls<T>(this IEnumerable<T> items)
+		{
+			return items.Where(x => x != null);
+		}
+
 		public static HashSet<T> ToHashSet<T>(this IEnumerable<T> items)
 		{
 			return new HashSet<T>(items);

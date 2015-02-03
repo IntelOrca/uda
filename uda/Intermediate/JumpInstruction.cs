@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Immutable;
 
 namespace uda.Intermediate
 {
@@ -12,6 +13,11 @@ namespace uda.Intermediate
 		public JumpInstruction(long address)
 		{
 			_address = address;
+		}
+
+		public override IInstructionNode CreateFromChildren(ImmutableArray<IInstructionNode> children)
+		{
+			return this;
 		}
 
 		public override string ToString()
