@@ -129,7 +129,7 @@ namespace uda
         private static void PrintAboutInformation()
         {
             Console.WriteLine("Universal Decompiler and Analyser");
-            Console.WriteLine("Copyright (C) Ted John 2015");
+            Console.WriteLine("Copyright (C) Ted John 2015-2016");
         }
 
         private static void PrintHelpInformation()
