@@ -1,19 +1,19 @@
 ﻿namespace uda.Intermediate
 {
-	internal enum InstructionType
-	{
-		Block,
+    internal enum InstructionType
+    {
+        Block,
 
-		// Low level instructions
-		ConditionalJump,
-		Jump,
+        // Low level instructions
+        ConditionalJump,
+        Jump,
 
-		// High level instructions
-		Assignment,
-		Do,
-		Goto,
-		If,
-		While,
-		Return
-	}
+        // High level instructions
+        Assignment,
+        Do,
+        Goto,
+        If,
+        While,
+        Return
+    }
 }

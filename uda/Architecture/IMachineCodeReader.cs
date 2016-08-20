@@ -1,4 +1,4 @@
 ﻿namespace uda.Architecture
 {
-	interface IMachineCodeReader { }
+    interface IMachineCodeReader { }
 }

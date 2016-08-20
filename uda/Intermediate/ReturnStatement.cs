@@ -2,15 +2,15 @@
 
 namespace uda.Intermediate
 {
-	internal class ReturnStatement : ChildlessInstructionNodeBase, IInstructionNode
-	{
-		public InstructionType Type { get { return InstructionType.Return; } }
+    internal class ReturnStatement : ChildlessInstructionNodeBase, IInstructionNode
+    {
+        public InstructionType Type { get { return InstructionType.Return; } }
 
-		public ReturnStatement() { }
+        public ReturnStatement() { }
 
-		public override string ToString()
-		{
-			return "return";
-		}
-	}
+        public override string ToString()
+        {
+            return "return";
+        }
+    }
 }

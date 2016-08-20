@@ -1,4 +1,4 @@
 ﻿namespace uda.Intermediate
 {
-	interface IWritableMemory { }
+    interface IWritableMemory { }
 }

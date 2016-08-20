@@ -2,8 +2,8 @@
 
 namespace uda.Strategy
 {
-	internal interface IDecompileStrategy
-	{
-		void Process(Function function);
-	}
+    internal interface IDecompileStrategy
+    {
+        void Process(Function function);
+    }
 }

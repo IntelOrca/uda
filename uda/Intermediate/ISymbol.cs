@@ -1,4 +1,4 @@
 ﻿namespace uda.Intermediate
 {
-	internal interface ISymbol { }
+    internal interface ISymbol { }
 }
