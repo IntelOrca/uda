@@ -1,10 +1,8 @@
-﻿using System.Collections.Immutable;
-
-namespace uda.Intermediate
+﻿namespace uda.Intermediate
 {
     internal class ReturnStatement : ChildlessInstructionNodeBase, IInstructionNode
     {
-        public InstructionType Type { get { return InstructionType.Return; } }
+        public InstructionType Type => InstructionType.Return;
 
         public ReturnStatement() { }
 

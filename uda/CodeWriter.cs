@@ -19,9 +19,13 @@ namespace uda
         private void AppendIndent()
         {
             if (UseTabIndents)
+            {
                 _stringBuilder.Append(new String('\t', _indentLevel));
+            }
             else
+            {
                 _stringBuilder.Append(new String(' ', _indentLevel * SpacesPerIndent));
+            }
         }
 
         public void AppendLine(string formatLine, params object[] args)
@@ -49,7 +53,9 @@ namespace uda
         public void EndIndent()
         {
             if (_indentLevel == 0)
+            {
                 throw new InvalidOperationException("Indent level is 0.");
+            }
             _indentLevel--;
         }
 

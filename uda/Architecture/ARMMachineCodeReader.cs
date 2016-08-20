@@ -71,26 +71,34 @@ namespace uda.Architecture
             _branchAddesses.Clear();
             _branchAddesses.Enqueue(startAddress);
 
-            while (_branchAddesses.Count > 0) {
+            while (_branchAddesses.Count > 0)
+            {
                 long address = _branchAddesses.Dequeue();
                 if (_readAddresses.Contains(address))
+                {
                     continue;
-                
+                }
+
                 _peFileStream.Seek(address, SeekOrigin.Begin);
 
                 _endOfBranch = false;
 
                 IInstructionNode[] iis;
-                while ((iis = Read()) != null) {
+                while ((iis = Read()) != null)
+                {
                     _readAddresses.Add(address);
 
                     yield return new AddressInstructionPair(address, iis[0]);
                     for (int i = 1; i < iis.Length; i++)
+                    {
                         yield return new AddressInstructionPair(iis[i]);
+                    }
 
                     address = _peFileStream.Position;
                     if (_endOfBranch)
+                    {
                         break;
+                    }
                 }
             }
         }
@@ -129,7 +137,8 @@ namespace uda.Architecture
                 operation = new AddExpression(operand1, operand2);
                 break;
             case ArithmeticOpcode.CMP:
-                return new[] {
+                return new[]
+                {
                     new AssignmentStatement(GetRegisterFlag(RegisterFlag.Carry), new GreaterThanExpression(operand1, operand2))
                 };
             case ArithmeticOpcode.ORR:
@@ -148,11 +157,14 @@ namespace uda.Architecture
         private IExpression GetOperand2(int instruction)
         {
             bool isImmediateOperand = (instruction & (1 << 25)) != 0;
-            if (isImmediateOperand) {
+            if (isImmediateOperand)
+            {
                 int rotate = ((instruction >> 8) & 0x0F) * 2;
                 int imm = instruction & 0xFF;
                 return new LiteralExpression((int)BitHelper.RotateRight((uint)imm, rotate));
-            } else {
+            }
+            else
+            {
                 LocalExpression rm = GetRegister(instruction & 0x07, 32);
                 bool shiftAmountIsRegister = ((instruction >> 3) & 1) == 1;
                 int shiftType = (instruction >> 5) & 3;
@@ -191,33 +203,47 @@ namespace uda.Architecture
             var result = new List<AssignmentStatement>(2);
 
             IExpression offsetExpression = GetOffsetExpression(addressRegister, offset, addOffset);
-            if (preIndex) {
+            if (preIndex)
+            {
                 IExpression addressExpression;
-                if (writeback && offset != 0) {
+                if (writeback && offset != 0)
+                {
                     result.Add(new AssignmentStatement((IWritableMemory)addressRegister, offsetExpression));
                     addressExpression = addressRegister;
-                } else {
+                }
+                else
+                {
                     addressExpression = offsetExpression;
                 }
-                if (isLoad) {
+                if (isLoad)
+                {
                     source = new AddressOfExpression(addressExpression);
                     target = valueRegister;
-                } else {
+                }
+                else
+                {
                     source = valueRegister;
                     target = new AddressOfExpression(addressExpression);
                 }
                 result.Add(new AssignmentStatement((IWritableMemory)target, source));
-            } else {
-                if (isLoad) {
+            }
+            else
+            {
+                if (isLoad)
+                {
                     source = new AddressOfExpression(addressRegister);
                     target = valueRegister;
-                } else {
+                }
+                else
+                {
                     source = valueRegister;
                     target = new AddressOfExpression(addressRegister);
                 }
                 result.Add(new AssignmentStatement((IWritableMemory)target, source));
                 if (writeback)
+                {
                     result.Add(new AssignmentStatement((IWritableMemory)addressRegister, offsetExpression));
+                }
             }
             return result.ToArray();
         }
@@ -225,7 +251,9 @@ namespace uda.Architecture
         private IExpression GetOffsetExpression(IExpression baseExpr, int offset, bool addOffset)
         {
             if (offset == 0)
+            {
                 return baseExpr;
+            }
 
             return addOffset ?
                 (IExpression)new AddExpression(baseExpr, new LiteralExpression(offset)) :
@@ -239,7 +267,9 @@ namespace uda.Architecture
 
             // Sign extend offset
             if ((offset & 0x800000) != 0)
+            {
                 offset = (int)((uint)offset | 0xFF000000);
+            }
 
             offset = (offset * 4) + 4;
 
@@ -250,7 +280,8 @@ namespace uda.Architecture
             ConditionalCode cc = GetConditionCode(instruction);
             switch (cc) {
             case ConditionalCode.CS:
-                return new[] {
+                return new[]
+                {
                     new ConditionalJumpInstruction(
                         new EqualityExpression(
                             GetRegisterFlag(RegisterFlag.Carry),

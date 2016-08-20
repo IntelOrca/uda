@@ -7,8 +7,8 @@ namespace uda.Architecture
 {
     internal class AMD64MachineCodeReader : IMachineCodeReader, IDisposable
     {
-        FileStream _peFileStream;
-        BinaryReader _peBinaryReader;
+        private readonly FileStream _peFileStream;
+        private readonly BinaryReader _peBinaryReader;
 
         private enum RegisterFlag
         {
@@ -51,14 +51,19 @@ namespace uda.Architecture
             virtualAddress = startVirtualAddress;
             _peFileStream.Seek(GetPhysicalAddress(startVirtualAddress), SeekOrigin.Begin);
 
-            while ((iis = Read()) != null) {
+            while ((iis = Read()) != null)
+            {
                 yield return new AddressInstructionPair(virtualAddress, iis[0]);
                 for (int i = 1; i < iis.Length; i++)
+                {
                     yield return new AddressInstructionPair(iis[i]);
+                }
 
                 virtualAddress = GetVirtualAddress(_peFileStream.Position);
                 if (iis[0].Type == InstructionType.Return)
+                {
                     break;
+                }
             }
         }
 
@@ -122,7 +127,8 @@ namespace uda.Architecture
             LocalExpression reg = GetRegister(regId, regSize);
 
             string instr = String.Format("dec {0}", reg.OriginalName);
-            return new[] {
+            return new[]
+            {
                 new AssignmentStatement(reg, new SubtractExpression(reg, new LiteralExpression(1, regSize))),
                 new AssignmentStatement(GetRegisterFlag(RegisterFlag.Zero), new EqualityExpression(reg, new LiteralExpression(0, regSize)))
             };
@@ -203,7 +209,8 @@ namespace uda.Architecture
         {
             string regName = GetRegisterName(id, size);
             int offset = 0;
-            if (size == 8 && id >= 4) {
+            if (size == 8 && id >= 4)
+            {
                 id -= 4;
                 offset = 8;
             }

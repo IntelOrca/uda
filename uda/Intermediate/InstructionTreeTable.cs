@@ -11,13 +11,18 @@ namespace uda.Intermediate
 
         public InstructionTree EntryTree { get; set; }
 
-        public InstructionTree this[long address] { get { return _instructionTrees[address]; } }
+        public InstructionTree this[long address]
+        {
+            get { return _instructionTrees[address]; }
+        }
 
         public void Add(InstructionTree tree)
         {
             _instructionTrees[tree.Address] = tree;
             if (EntryTree != null && EntryTree.Address == tree.Address)
+            {
                 EntryTree = tree;
+            }
         }
 
         public void Remove(long address)
@@ -27,15 +32,25 @@ namespace uda.Intermediate
 
         public void Clean()
         {
-            foreach (InstructionTree tree in _instructionTrees.Values.ToArray()) {
+            foreach (InstructionTree tree in _instructionTrees.Values.ToArray())
+            {
                 IInstructionNode cleanTree = InstructionNode.Clean(tree);
                 if (tree != cleanTree)
+                {
                     Add((InstructionTree)cleanTree);
+                }
             }
         }
 
-        public IEnumerator<InstructionTree> GetEnumerator() { return _instructionTrees.Values.GetEnumerator(); }
-        IEnumerator IEnumerable.GetEnumerator() { return GetEnumerator(); }
+        public IEnumerator<InstructionTree> GetEnumerator()
+        {
+            return _instructionTrees.Values.GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
 
         public static InstructionTreeTable CreateFromInstructions(IEnumerable<AddressInstructionPair> inputInstructions)
         {
@@ -43,7 +58,9 @@ namespace uda.Intermediate
 
             AddressInstructionPair[] addrInstrPairs = inputInstructions.AsArray();
             if (addrInstrPairs.Length == 0)
+            {
                 return treeTable;
+            }
 
             long entryAddress = addrInstrPairs[0].Address.Value;
 
@@ -60,8 +77,10 @@ namespace uda.Intermediate
             List<IInstructionNode> currentTreeInstructions = new List<IInstructionNode>();
             long currentTreeAddress = 0;
 
-            foreach (AddressInstructionPair aiPair in addrInstrPairs) {
-                if (currentTreeInstructions.Count == 0) {
+            foreach (AddressInstructionPair aiPair in addrInstrPairs)
+            {
+                if (currentTreeInstructions.Count == 0)
+                {
                     Debug.Assert(aiPair.Address.HasValue);
                     currentTreeAddress = aiPair.Address.Value;
                 }
@@ -70,7 +89,9 @@ namespace uda.Intermediate
                 bool beginNewTree = false;
                 bool endTree = false;
                 if (aiPair.Address.HasValue && jumpDestinationAddresses.Contains(aiPair.Address.Value))
-                    beginNewTree = true;    
+                {
+                    beginNewTree = true;
+                }
 
                 switch (instr.Type) {
                 case InstructionType.Jump:
@@ -87,7 +108,8 @@ namespace uda.Intermediate
                     break;
                 }
 
-                if (beginNewTree && currentTreeInstructions.Count > 0) {
+                if (beginNewTree && currentTreeInstructions.Count > 0)
+                {
                     currentTreeInstructions.Add(new GotoStatement(new InstructionTreeReference(treeTable, aiPair.Address.Value)));
                     treeTable.Add(new InstructionTree(currentTreeAddress, currentTreeInstructions));
                     currentTreeInstructions.Clear();
@@ -96,7 +118,8 @@ namespace uda.Intermediate
 
                 currentTreeInstructions.Add(instr);
 
-                if (endTree) {
+                if (endTree)
+                {
                     treeTable.Add(new InstructionTree(currentTreeAddress, currentTreeInstructions));
                     currentTreeInstructions.Clear();
                 }
@@ -104,7 +127,9 @@ namespace uda.Intermediate
 
             // Add last working tree to the table
             if (currentTreeInstructions.Count > 0)
+            {
                 treeTable.Add(new InstructionTree(currentTreeAddress, currentTreeInstructions));
+            }
 
             // Set the entry tree to the tree with the entry address
             treeTable.EntryTree = treeTable[entryAddress];

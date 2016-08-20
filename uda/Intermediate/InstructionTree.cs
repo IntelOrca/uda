@@ -6,34 +6,32 @@ namespace uda.Intermediate
 {
     internal class InstructionTree : InstructionNodeBase, IInstructionNode
     {
-        private long _address;
-
-        public InstructionType Type { get { return InstructionType.Block; } }
-        public long Address { get { return _address; } }
+        public InstructionType Type => InstructionType.Block;
+        public long Address { get; }
 
         public InstructionTree(long address)
         {
-            _address = address;
+            Address = address;
         }
 
         public InstructionTree(long address, IEnumerable<IInstructionNode> children) : base(children)
         {
-            _address = address;
+            Address = address;
         }
 
         public InstructionTree(long address, ImmutableArray<IInstructionNode> children) : base(children)
         {
-            _address = address;
+            Address = address;
         }
 
         public override IInstructionNode CreateFromChildren(ImmutableArray<IInstructionNode> children)
         {
-            return new InstructionTree(_address, children);
+            return new InstructionTree(Address, children);
         }
 
         public override string ToString()
         {
-            return String.Format("Tree 0x{0:X6}", _address);
+            return String.Format("Tree 0x{0:X6}", Address);
         }
     }
 }

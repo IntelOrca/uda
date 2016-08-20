@@ -39,19 +39,25 @@ namespace uda.Intermediate
 
         public static IEnumerable<IExpression> GetFlattenedExpressionTree(IExpression head)
         {
-            if (head.Children.Count == 0) {
+            if (head.Children.Count == 0)
+            {
                 yield return head;
                 yield break;
             }
 
             foreach (IExpression expr1 in head.Children)
+            {
                 foreach (IExpression expr2 in GetFlattenedExpressionTree(expr1))
+                {
                     yield return expr2;
+                }
+            }
         }
 
         public static bool IsTautology(IExpression expression)
         {
-            if (expression is LiteralExpression) {
+            if (expression is LiteralExpression)
+            {
                 LiteralExpression literalExpression = (LiteralExpression)expression;
                 return literalExpression.ValueUnsigned != 0;
             }
@@ -78,45 +84,39 @@ namespace uda.Intermediate
 
     internal abstract class UnaryExpressionBase : ExpressionBase, IUnaryExpression
     {
-        private readonly IExpression _child;
-
-        public IExpression Child { get { return _child; } }
+        public IExpression Child { get; }
 
         protected UnaryExpressionBase(IExpression child)
             : base(child)
         {
-            _child = child;
+            Child = child;
         }
     }
 
     internal abstract class BinaryExpressionBase : ExpressionBase, IBinaryExpression
     {
-        private readonly IExpression _leftChild;
-        private readonly IExpression _rightChild;
-
-        public IExpression LeftChild { get { return _leftChild; } }
-        public IExpression RightChild { get { return _rightChild; } }
+        public IExpression LeftChild { get; }
+        public IExpression RightChild { get; }
 
         protected BinaryExpressionBase(IExpression leftChild, IExpression rightChild)
             : base(new[] { leftChild, rightChild })
         {
-            _leftChild = leftChild;
-            _rightChild = rightChild;
+            LeftChild = leftChild;
+            RightChild = rightChild;
         }
     }
 
     internal class LiteralExpression : NullaryExpressionBase
     {
         private readonly long _value;
-        private readonly int _size;
 
-        public int Size { get { return _size; } }
+        public int Size { get; }
 
         public ulong ValueUnsigned
         {
             get
             {
-                return (ulong)(_value & ((1 << _size) - 1));
+                return (ulong)(_value & ((1 << Size) - 1));
             }
         }
 
@@ -124,9 +124,11 @@ namespace uda.Intermediate
         {
             get
             {
-                long result = _value & ((1 << _size) - 1);
-                if ((result & (1 << (_size - 1))) != 0)
-                    result = (long)((ulong)result | ~(ulong)((1 << _size) - 1));
+                long result = _value & ((1 << Size) - 1);
+                if ((result & (1 << (Size - 1))) != 0)
+                {
+                    result = (long)((ulong)result | ~(ulong)((1 << Size) - 1));
+                }
                 return result;
             }
         }
@@ -134,7 +136,7 @@ namespace uda.Intermediate
         public LiteralExpression(long value, int size)
         {
             _value = value;
-            _size = size;
+            Size = size;
         }
 
         public LiteralExpression(byte value) : this(value, 8) { }
@@ -150,32 +152,28 @@ namespace uda.Intermediate
 
     internal class LocalExpression : NullaryExpressionBase, IWritableMemory
     {
-        private readonly int _id;
-        private readonly string _name;
-        private readonly string _originalName;
-        private readonly int _offset;
-        private readonly int _width;
-
-        public int Id { get { return _id; } }
-        public string Name { get { return _name; } }
-        public string OriginalName { get { return _originalName; } }
-        public int Offset { get { return _offset; } }
-        public int Width { get { return _width; } }
+        public int Id { get; }
+        public string Name { get; }
+        public string OriginalName { get; }
+        public int Offset { get; }
+        public int Width { get; }
 
         public LocalExpression(int id, string name, string originalName, int offset, int width)
         {
-            _id = id;
-            _name = name;
-            _originalName = originalName;
-            _offset = offset;
-            _width = width;
+            Id = id;
+            Name = name;
+            OriginalName = originalName;
+            Offset = offset;
+            Width = width;
         }
 
         public override string ToString()
         {
-            if (String.IsNullOrEmpty(_name))
-                return "local" + _id;
-            return _name;
+            if (String.IsNullOrEmpty(Name))
+            {
+                return "local" + Id;
+            }
+            return Name;
         }
     }
 

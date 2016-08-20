@@ -1,18 +1,15 @@
-﻿using System.Collections.Generic;
-using System.Collections.Immutable;
+﻿using System.Collections.Immutable;
 
 namespace uda.Intermediate
 {
     internal class GotoStatement : InstructionNodeBase, IInstructionNode
     {
-        private readonly InstructionTreeReference _child;
-
-        public InstructionType Type { get { return InstructionType.Goto; } }
-        public InstructionTreeReference Child { get { return _child; } }
+        public InstructionType Type => InstructionType.Goto;
+        public InstructionTreeReference Child { get; }
 
         public GotoStatement(InstructionTreeReference child) : base(child)
         {
-            _child = child;
+            Child = child;
         }
 
         public override IInstructionNode CreateFromChildren(ImmutableArray<IInstructionNode> children)
@@ -22,7 +19,7 @@ namespace uda.Intermediate
 
         public override string ToString()
         {
-            return "goto " + _child;
+            return "goto " + Child;
         }
     }
 }

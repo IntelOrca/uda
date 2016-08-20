@@ -20,7 +20,8 @@ namespace uda.Language
 
         private void WriteNode(CodeWriter cw, IInstructionNode node)
         {
-            if (node is InstructionTreeReference) {
+            if (node is InstructionTreeReference)
+            {
                 cw.AppendLine("goto loc_{0:X6};", ((InstructionTreeReference)node).Address);
                 return;
             }
@@ -58,9 +59,12 @@ namespace uda.Language
                 break;
             case InstructionType.While:
                 WhileStatement whileStatement = (WhileStatement)node;
-                if (whileStatement.Child.Children.Count == 0) {
+                if (whileStatement.Child.Children.Count == 0)
+                {
                     cw.AppendLine("while ({0}) {{ }}", whileStatement.Expression);
-                } else {
+                }
+                else
+                {
                     cw.AppendLine("while ({0})", whileStatement.Expression);
                     OpenBrace(cw);
                     WriteNode(cw, whileStatement.Child);
@@ -72,26 +76,33 @@ namespace uda.Language
 
         private void WriteTree(CodeWriter cw, InstructionTree tree, InstructionTree nextTree = null, bool omitLabel = false)
         {
-            if (!omitLabel) {
+            if (!omitLabel)
+            {
                 cw.EndIndent();
                 cw.AppendLine("loc_{0:X6}:", tree.Address);
                 cw.BeginIndent();
             }
 
-            for (int i = 0; i < tree.Children.Count; i++) {
+            for (int i = 0; i < tree.Children.Count; i++)
+            {
                 IInstructionNode instruction = tree.Children[i];
 
-                if (i == tree.Children.Count - 1 && instruction.Type == InstructionType.Goto && nextTree != null) {
+                if (i == tree.Children.Count - 1 && instruction.Type == InstructionType.Goto && nextTree != null)
+                {
                     long address = ((GotoStatement)instruction).Child.Address;
                     if (address == nextTree.Address)
+                    {
                         continue;
+                    }
                 }
 
                 WriteNode(cw, instruction);
             }
 
             if (nextTree != null)
+            {
                 cw.AppendLine();
+            }
         }
 
         public string Write(Function function)
@@ -107,7 +118,9 @@ namespace uda.Language
             trees.Insert(0, entryTree);
 
             for (int i = 0; i < trees.Count; i++)
+            {
                 WriteTree(cw, trees[i], i != trees.Count - 1 ? trees[i + 1] : null, i == 0);
+            }
 
             CloseBrace(cw);
 

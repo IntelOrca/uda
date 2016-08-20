@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Linq;
 using uda.Intermediate;
 
@@ -28,29 +27,40 @@ namespace uda.Strategy
                 .Where(x => _treeReferences.ContainsKey(x.Address))
                 .ToArray();
 
-            foreach (InstructionTree tree in treeTable.ToArray()) {
+            foreach (InstructionTree tree in treeTable.ToArray())
+            {
                 if (singleTreeReferences.Contains(tree.Address))
+                {
                     continue;
+                }
 
                 IInstructionNode newTree = tree;
                 foreach (InstructionTree treeToInline in singleTrees)
+                {
                     newTree = InlineTree(newTree, treeToInline);
+                }
 
                 treeTable.Add((InstructionTree)newTree);
             }
 
             foreach (long address in singleTreeReferences)
+            {
                 treeTable.Remove(address);
+            }
         }
 
         private IInstructionNode InlineTree(IInstructionNode node, InstructionTree treeToInline)
         {
             InstructionTreeReference treeReference = node as InstructionTreeReference;
             if (treeReference != null && treeReference.Address == treeToInline.Address)
+            {
                 return new InstructionNode(treeToInline.Children);
+            }
 
             for (int i = 0; i < node.Children.Count; i++)
+            {
                 node = node.ReplaceChild(i, InlineTree(node.Children[i], treeToInline));
+            }
 
             return node;
         }
@@ -59,10 +69,14 @@ namespace uda.Strategy
         {
             InstructionTreeReference treeReference = node as InstructionTreeReference;
             if (treeReference != null)
+            {
                 AddTreeReference(treeReference.Address);
+            }
 
             foreach (IInstructionNode child in node.Children)
+            {
                 FindTreeReferences(child);
+            }
         }
 
         private void AddTreeReference(long address)

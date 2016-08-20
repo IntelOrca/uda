@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
@@ -10,7 +9,7 @@ namespace uda.Intermediate
     {
         public readonly static InstructionNode Empty = new InstructionNode(Enumerable.Empty<IInstructionNode>());
 
-        public InstructionType Type { get { return InstructionType.Block; } }
+        public InstructionType Type => InstructionType.Block;
 
         public InstructionNode(IEnumerable<IInstructionNode> children) : base(children) { }
         public InstructionNode(ImmutableArray<IInstructionNode> children) : base(children) { }
@@ -19,7 +18,9 @@ namespace uda.Intermediate
         {
             var builder = ImmutableArray.CreateBuilder<IInstructionNode>(Children.Count);
             for (int i = 0; i < Children.Count; i++)
+            {
                 builder.Add(i == index ? newInstruction : Children[i]);
+            }
 
             return new InstructionNode(builder.ToImmutable());
         }
@@ -39,22 +40,33 @@ namespace uda.Intermediate
             // Avoid creating a new array of child nodes unless there is going to be a change
             ImmutableArray<IInstructionNode>.Builder newChildren = null;
 
-            if (node.Type == InstructionType.Block && node.Children.Any(x => x.Type == InstructionType.Block)) {
+            if (node.Type == InstructionType.Block && node.Children.Any(x => x.Type == InstructionType.Block))
+            {
                 newChildren = ImmutableArray.CreateBuilder<IInstructionNode>();
-                foreach (IInstructionNode child in node) {
+                foreach (IInstructionNode child in node)
+                {
                     IInstructionNode cleanChild = Clean(child);
                     if (cleanChild.Type == InstructionType.Block)
+                    {
                         newChildren.AddRange(cleanChild.Children);
+                    }
                     else
+                    {
                         newChildren.Add(child);
+                    }
                 }
                 return node.CreateFromChildren(newChildren.ToImmutable());
-            } else {
+            }
+            else
+            {
                 int index = 0;
-                foreach (IInstructionNode child in node) {
+                foreach (IInstructionNode child in node)
+                {
                     IInstructionNode cleanChild = Clean(child);
-                    if (cleanChild != child) {
-                        if (newChildren == null) {
+                    if (cleanChild != child)
+                    {
+                        if (newChildren == null)
+                        {
                             newChildren = ImmutableArray.CreateBuilder<IInstructionNode>(node.Children.Count);
                             newChildren.AddRange(node.Children);
                         }
@@ -81,8 +93,12 @@ namespace uda.Intermediate
             }
 
             foreach (IInstructionNode child in node)
+            {
                 if (IsNodeDeadEnd(child))
+                {
                     return true;
+                }
+            }
 
             return false;
         }

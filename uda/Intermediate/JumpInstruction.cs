@@ -5,14 +5,12 @@ namespace uda.Intermediate
 {
     internal class JumpInstruction : InstructionNodeBase, IJumpInstruction
     {
-        private readonly long _address;
-
-        public InstructionType Type { get { return InstructionType.Jump; } }
-        public long Address { get { return _address; } }
+        public InstructionType Type => InstructionType.Jump;
+        public long Address { get; }
 
         public JumpInstruction(long address)
         {
-            _address = address;
+            Address = address;
         }
 
         public override IInstructionNode CreateFromChildren(ImmutableArray<IInstructionNode> children)
@@ -22,7 +20,7 @@ namespace uda.Intermediate
 
         public override string ToString()
         {
-            return String.Format("jump 0x{0:X6}", _address);
+            return String.Format("jump 0x{0:X6}", Address);
         }
     }
 }

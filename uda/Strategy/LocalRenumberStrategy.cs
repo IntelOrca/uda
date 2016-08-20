@@ -18,7 +18,9 @@ namespace uda.Strategy
 
             List<LocalExpression> localExpressions = new List<LocalExpression>();
             foreach (InstructionTree tree in treeTable)
+            {
                 localExpressions.AddRange(GetAllExpressionsInTree(tree).OfType<LocalExpression>());
+            }
 
             int[] usedLocalIds = localExpressions
                 .Select(x => x.Id)
@@ -26,20 +28,30 @@ namespace uda.Strategy
                 .ToArray();
 
             for (int i = 0; i < usedLocalIds.Length; i++)
+            {
                 _idRemap[usedLocalIds[i]] = i;
+            }
 
             foreach (InstructionTree tree in treeTable.ToArray())
+            {
                 treeTable.Add(RemapTree(tree));
+            }
         }
 
         private IEnumerable<IExpression> GetAllExpressionsInTree(IInstructionNode node)
         {
             foreach (IExpression expr in Expression.GetAllExpressions(node))
+            {
                 yield return expr;
+            }
 
             foreach (IInstructionNode child in node.Children)
+            {
                 foreach (IExpression expr in GetAllExpressionsInTree(child))
+                {
                     yield return expr;
+                }
+            }
         }
 
         private InstructionTree RemapTree(InstructionTree tree)
@@ -48,7 +60,9 @@ namespace uda.Strategy
 
             var instructions = ImmutableArray.CreateBuilder<IInstructionNode>(originalInstructions.Count);
             for (int i = 0; i < originalInstructions.Count; i++)
+            {
                 instructions.Add(RemapInstruction(originalInstructions[i]));
+            }
 
             return new InstructionTree(tree.Address, instructions.ToImmutable());
         }
@@ -75,24 +89,37 @@ namespace uda.Strategy
 
         private IExpression RemapExpressionTree(IExpression tree)
         {
-            if (tree is LocalExpression) {
+            if (tree is LocalExpression)
+            {
                 return RemapLocalExpression((LocalExpression)tree);
-            } else if (tree is AddressOfExpression) {
+            }
+            else if (tree is AddressOfExpression)
+            {
                 AddressOfExpression expr = (AddressOfExpression)tree;
                 return new AddressOfExpression(RemapExpressionTree(expr.Child));
-            } else if (tree is AddExpression) {
+            }
+            else if (tree is AddExpression)
+            {
                 AddExpression expr = (AddExpression)tree;
                 return new AddExpression(RemapExpressionTree(expr.LeftChild), RemapExpressionTree(expr.RightChild));
-            } else if (tree is SubtractExpression) {
+            }
+            else if (tree is SubtractExpression)
+            {
                 SubtractExpression expr = (SubtractExpression)tree;
                 return new SubtractExpression(RemapExpressionTree(expr.LeftChild), RemapExpressionTree(expr.RightChild));
-            } else if (tree is EqualityExpression) {
+            }
+            else if (tree is EqualityExpression)
+            {
                 EqualityExpression expr = (EqualityExpression)tree;
                 return new EqualityExpression(RemapExpressionTree(expr.LeftChild), RemapExpressionTree(expr.RightChild));
-            } else if (tree is InequalityExpression) {
+            }
+            else if (tree is InequalityExpression)
+            {
                 InequalityExpression expr = (InequalityExpression)tree;
                 return new InequalityExpression(RemapExpressionTree(expr.LeftChild), RemapExpressionTree(expr.RightChild));
-            } else {
+            }
+            else
+            {
                 return tree;
             }
         }

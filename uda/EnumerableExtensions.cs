@@ -10,16 +10,18 @@ namespace uda
         {
             T[] result = items as T[];
             if (result == null)
+            {
                 result = items.ToArray();
-
+            }
             return result;
         }
 
         public static ImmutableArray<T> AsImmutableArray<T>(this IEnumerable<T> items)
         {
             if (items is ImmutableArray<T>)
+            {
                 return (ImmutableArray<T>)items;
-
+            }
             return items.ToImmutableArray();
         }
 

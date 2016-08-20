@@ -18,17 +18,28 @@ namespace uda
         private static void Main(string[] args)
         {
             if (!ParseCommandLineArguments(args))
+            {
                 return;
+            }
 
             // Read binary and create basic instructions
             AddressInstructionPair[] iis;
-            if (_architecture.ToLower() == "x86") {
+            if (_architecture.ToLower() == "x86")
+            {
                 using (var machineCodeReader = new AMD64MachineCodeReader(_inputFile))
+                {
                     iis = machineCodeReader.Read(_address).ToArray();
-            } else if (_architecture.ToLower() == "arm") {
+                }
+            }
+            else if (_architecture.ToLower() == "arm")
+            {
                 using (var machineCodeReader = new ARMMachineCodeReader(_inputFile))
+                {
                     iis = machineCodeReader.Read(_address).ToArray();
-            } else {
+                }
+            }
+            else
+            {
                 Console.WriteLine("Unknown or unsupported architecture.");
                 return;
             }
@@ -58,10 +69,12 @@ namespace uda
         {
             try {
                 Queue<string> argQueue = new Queue<string>(args);
-                while (argQueue.Count > 0) {
+                while (argQueue.Count > 0)
+                {
                     string arg = argQueue.Dequeue();
 
-                    if (arg.StartsWith("--")) {
+                    if (arg.StartsWith("--"))
+                    {
                         string option = arg.Substring(2);
                         arg = argQueue.Dequeue();
 
@@ -74,18 +87,25 @@ namespace uda
                             _architecture = arg;
                             break;
                         }
-                    } else if (arg.StartsWith("-")) {
+                    }
+                    else if (arg.StartsWith("-"))
+                    {
                         char[] singleOptions = arg.Substring(1).ToCharArray();
-                        foreach (char c in singleOptions) {
+                        foreach (char c in singleOptions)
+                        {
                             switch (c) {
                             case 'v':
                                 PrintVersionInformation();
                                 return false;
                             }
                         }
-                    } else {
+                    }
+                    else
+                    {
                         if (!String.IsNullOrEmpty(_inputFile))
+                        {
                             throw new Exception();
+                        }
 
                         _inputFile = arg;
                         continue;
@@ -93,10 +113,14 @@ namespace uda
                 }
 
                 if (String.IsNullOrEmpty(_inputFile))
+                {
                     throw new Exception();
+                }
 
                 return true;
-            } catch {
+            }
+            catch
+            {
                 PrintHelpInformation();
                 return false;
             }
@@ -131,11 +155,15 @@ namespace uda
             byte[] b = new byte[2048];
             System.IO.Stream s = null;
 
-            try {
+            try
+            {
                 s = new System.IO.FileStream(filePath, System.IO.FileMode.Open, System.IO.FileAccess.Read);
                 s.Read(b, 0, 2048);
-            } finally {
-                if (s != null) {
+            }
+            finally
+            {
+                if (s != null)
+                {
                     s.Close();
                 }
             }

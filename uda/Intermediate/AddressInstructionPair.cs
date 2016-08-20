@@ -4,29 +4,30 @@ namespace uda.Intermediate
 {
     internal class AddressInstructionPair
     {
-        private readonly long? _address;
-        private readonly IInstructionNode _instruction;
-
-        public long? Address { get { return _address; } }
-        public IInstructionNode Instruction { get { return _instruction; } }
+        public long? Address { get; }
+        public IInstructionNode Instruction { get; }
 
         public AddressInstructionPair(IInstructionNode instruction)
         {
-            _instruction = instruction;
+            Instruction = instruction;
         }
 
         public AddressInstructionPair(long address, IInstructionNode instruction)
         {
-            _address = address;
-            _instruction = instruction;
+            Address = address;
+            Instruction = instruction;
         }
 
         public override string ToString()
         {
-            if (_address.HasValue)
-                return String.Format("0x{0:X6}: {1}", _address, _instruction);
+            if (Address.HasValue)
+            {
+                return String.Format("0x{0:X6}: {1}", Address, Instruction);
+            }
             else
-                return String.Format("        : {0}", _instruction);
+            {
+                return String.Format("        : {0}", Instruction);
+            }
         }
     }
 }

@@ -24,10 +24,20 @@ namespace uda.Core
         public T FirstChild { get { return _children.FirstOrDefault(); } }
         public T LastChild { get { return _children.LastOrDefault(); } }
 
-        protected GreenNode() : this(ImmutableArray<T>.Empty) { }
-        protected GreenNode(T singleChild) : this(ImmutableArray.Create(singleChild)) { }
+        protected GreenNode()
+            : this(ImmutableArray<T>.Empty)
+        {
+        }
+
+        protected GreenNode(T singleChild) :
+            this(ImmutableArray.Create(singleChild))
+        {
+        }
+
         protected GreenNode(IEnumerable<T> children) :
-            this(children is ImmutableArray<T> ? (ImmutableArray<T>)children : ImmutableArray.CreateRange(children)) { }
+            this(children is ImmutableArray<T> ? (ImmutableArray<T>)children : ImmutableArray.CreateRange(children))
+        {
+        }
 
         protected GreenNode(ImmutableArray<T> children)
         {
@@ -37,7 +47,9 @@ namespace uda.Core
         public T ReplaceChild(int index, T newNode)
         {
             if (ReferenceEquals(_children[index], newNode))
+            {
                 return (T)(object)this;
+            }
 
             var newChildren = ImmutableArray.CreateBuilder<T>();
             newChildren.AddRange(_children);
@@ -51,12 +63,22 @@ namespace uda.Core
         public IEnumerable<T> GetDescendants()
         {
             foreach (IGreenNode<T> child in _children)
+            {
                 foreach (T descendant in child.GetDescendants())
+                {
                     yield return descendant;
+                }
+            }
         }
 
-        public IEnumerator<T> GetEnumerator() { return _children.AsEnumerable().GetEnumerator(); }
+        public IEnumerator<T> GetEnumerator()
+        {
+            return _children.AsEnumerable().GetEnumerator();
+        }
 
-        IEnumerator IEnumerable.GetEnumerator() { return GetEnumerator(); }
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
     }
 }
